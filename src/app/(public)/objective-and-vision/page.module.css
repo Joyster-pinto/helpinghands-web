@@ -1,0 +1,152 @@
+.wrapper {
+  background-color: #f8f9fa;
+  min-height: 80vh;
+}
+
+.headerBanner {
+  background: linear-gradient(rgba(30, 31, 35, 0.85), rgba(30, 31, 35, 0.85)), url('/images/IMG_20170729_181042.jpg');
+  background-size: cover;
+  background-position: center;
+  color: #ffffff;
+  padding: 60px 0;
+  text-align: center;
+}
+
+.title {
+  font-size: 36px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.breadcrumb {
+  font-size: 14px;
+  color: #f36f21;
+  font-weight: 600;
+}
+
+.contentSection {
+  padding: 60px 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 35px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e9ecef;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f36f21;
+}
+
+.icon {
+  color: #f36f21;
+}
+
+.cardHeader h2 {
+  font-size: 24px;
+  color: #2b2d32;
+}
+
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.list li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 15px;
+  color: #495057;
+  line-height: 1.6;
+}
+
+.checkIcon {
+  color: #f36f21;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.visionBox {
+  background: #fff5ee;
+  border-left: 4px solid #f36f21;
+  padding: 20px;
+  border-radius: 4px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2b2d32;
+  font-style: italic;
+  margin-bottom: 30px;
+}
+
+.quoteCard {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  border: 1px solid #e9ecef;
+}
+
+.quoteImg {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #f36f21;
+}
+
+.quoteText {
+  font-size: 14px;
+  color: #6c757d;
+  font-style: italic;
+  margin-bottom: 6px;
+}
+
+.quoteAuthor {
+  font-weight: 700;
+  color: #f36f21;
+  font-size: 13px;
+}
+
+.ctaBox {
+  background: #2b2d32;
+  color: #ffffff;
+  padding: 25px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.ctaBox h3 {
+  color: #ffffff;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.ctaBox p {
+  color: #a0a0a0;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+@media (max-width: 992px) {
+  .grid { grid-template-columns: 1fr; }
+}

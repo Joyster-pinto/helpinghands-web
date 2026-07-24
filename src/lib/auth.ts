@@ -1,0 +1,73 @@
+import { NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import connectToDatabase from "@/lib/mongodb";
+import User from "@/models/User";
+import { mockUsers } from "@/data/mockData";
+
+export const authOptions: NextAuthOptions = {
+  providers: [
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+        
+        try {
+          // Attempt authentication via MongoDB Atlas
+          await connectToDatabase();
+          const dbUser = await User.findOne({ email: credentials.email });
+
+          if (dbUser && dbUser.password === credentials.password) {
+            return {
+              id: dbUser.id,
+              name: dbUser.name,
+              email: dbUser.email,
+              role: dbUser.role,
+            };
+          }
+        } catch (dbError) {
+          console.warn("MongoDB connection fallback to local data:", dbError);
+        }
+
+        // Fallback to mock data if DB is offline or during static compilation
+        const mockUser = mockUsers.find(
+          (u) => u.email === credentials.email && u.password === credentials.password
+        );
+
+        if (mockUser) {
+          return {
+            id: mockUser.id,
+            name: mockUser.name,
+            email: mockUser.email,
+            role: mockUser.role,
+          };
+        }
+
+        return null;
+      }
+    })
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = (user as any).role;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        (session.user as any).role = token.role;
+      }
+      return session;
+    }
+  },
+  pages: {
+    signIn: "/login",
+  },
+  session: {
+    strategy: "jwt",
+  },
+};

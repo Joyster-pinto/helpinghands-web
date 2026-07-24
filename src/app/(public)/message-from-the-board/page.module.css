@@ -1,0 +1,105 @@
+.wrapper {
+  background-color: #f8f9fa;
+  min-height: 80vh;
+}
+
+.headerBanner {
+  background: linear-gradient(rgba(30, 31, 35, 0.85), rgba(30, 31, 35, 0.85)), url('/images/IMG_20170729_181042.jpg');
+  background-size: cover;
+  background-position: center;
+  color: #ffffff;
+  padding: 60px 0;
+  text-align: center;
+}
+
+.title {
+  font-size: 36px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.breadcrumb {
+  font-size: 14px;
+  color: #f36f21;
+  font-weight: 600;
+}
+
+.contentSection {
+  padding: 60px 0;
+}
+
+.card {
+  max-width: 850px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 50px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e9ecef;
+  position: relative;
+}
+
+.iconHeader {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.quoteIcon {
+  color: #f36f21;
+  opacity: 0.8;
+}
+
+.messageBody {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #495057;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.leadText {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2b2d32;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.highlightBox {
+  background: #fff5ee;
+  border-left: 4px solid #f36f21;
+  padding: 25px;
+  border-radius: 6px;
+  font-size: 18px;
+  color: #2b2d32;
+  font-style: italic;
+  text-align: center;
+
+}
+
+.signatureBox {
+  margin-top: 40px;
+  padding-top: 25px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.signatureInfo h4 {
+  font-size: 18px;
+  color: #2b2d32;
+}
+
+.signatureInfo p {
+  font-size: 13px;
+  color: #f36f21;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .card { padding: 30px 20px; }
+  .signatureBox { flex-direction: column; text-align: center; gap: 15px; }
+}

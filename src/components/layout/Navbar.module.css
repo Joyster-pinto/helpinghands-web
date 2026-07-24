@@ -1,0 +1,281 @@
+.header {
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Top Utility Bar */
+.topBar {
+  background-color: #1e1f23;
+  color: #a0a0a0;
+  font-size: 13px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.topBar :global(.container),
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topBarLeft,
+.topBarRight {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.topItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #d0d0d0;
+}
+
+.socialIcons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.socialIcons a {
+  color: #a0a0a0;
+  transition: color 0.2s ease;
+}
+
+.socialIcons a:hover {
+  color: #f36f21;
+}
+
+.loginBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.loginBtn:hover {
+  background: #f36f21;
+  color: #ffffff;
+}
+
+/* Main Navigation Bar (Orange Header matching screenshot) */
+.mainNav {
+  background: linear-gradient(135deg, #f36f21 0%, #e85f17 100%);
+  padding: 0;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  text-decoration: none;
+}
+
+.logoImg {
+  height: 48px;
+  width: auto;
+  border-radius: 4px;
+  background: #ffffff;
+  padding: 2px;
+}
+
+.logoTextGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.logoTitle {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+
+.logoSub {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.5px;
+}
+
+.navMenu {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navItem {
+  position: relative;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 16px;
+  color: #ffffff;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.navLink:hover,
+.navLink.active {
+  background-color: rgba(0, 0, 0, 0.15);
+  color: #ffffff;
+}
+
+.dropdownToggle {
+  cursor: pointer;
+}
+
+/* Dropdown Menu (Matching Charcoal Dark `#2b2d32` in user's image) */
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 260px;
+  background-color: #2b2d32;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  list-style: none;
+  padding: 8px 0;
+  margin: 0;
+  border-top: 3px solid #f36f21;
+  animation: fadeIn 0.2s ease;
+  z-index: 1100;
+}
+
+.dropdownLink {
+  display: block;
+  padding: 12px 20px;
+  color: #e0e0e0;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.dropdownLink:hover {
+  background-color: #f36f21;
+  color: #ffffff;
+  padding-left: 24px;
+}
+
+.donateHeaderBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #2b2d32;
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+}
+
+.donateHeaderBtn:hover {
+  background-color: #1e1f23;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 992px) {
+  .topBarLeft { display: none; }
+  .navMenu { display: none; }
+  .donateHeaderBtn { display: none; }
+  .hamburger { display: block; }
+
+  .mobileDrawer {
+    background-color: #2b2d32;
+    padding: 20px;
+    border-top: 3px solid #f36f21;
+  }
+
+  .mobileMenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .mobileLink {
+    display: block;
+    padding: 12px 0;
+    color: #ffffff;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .mobileGroupTitle {
+    color: #f36f21;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    margin-top: 15px;
+    padding-bottom: 5px;
+  }
+
+  .mobileSubLink {
+    display: block;
+    padding: 8px 15px;
+    color: #d0d0d0;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .mobileLoginBtn {
+    display: block;
+    margin-top: 20px;
+    background: #f36f21;
+    color: #ffffff;
+    text-align: center;
+    padding: 12px;
+    border-radius: 4px;
+    font-weight: 700;
+  }
+}
