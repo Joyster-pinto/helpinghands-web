@@ -109,9 +109,9 @@ export default function BeneficiariesPage() {
                       <Link href={`/dashboard/beneficiaries/${ben.id}`} className={styles.iconBtn}>
                         <Eye size={16} />
                       </Link>
-                      <button className={styles.iconBtn}>
+                      <Link href={`/dashboard/beneficiaries/${ben.id}`} className={styles.iconBtn} title="Edit / View Student">
                         <Edit size={16} />
-                      </button>
+                      </Link>
                     </div>
                   </td>
                 </tr>

@@ -40,11 +40,11 @@ export default function BeneficiaryDetail({ params }: { params: Promise<{ id: st
           </div>
         </div>
         <div className={styles.headerActions}>
-          <button className={styles.secondaryBtn}>
+          <button className={styles.secondaryBtn} onClick={() => window.print()}>
             <Download size={16} />
-            <span>Export</span>
+            <span>Export PDF</span>
           </button>
-          <button className={styles.primaryBtn}>
+          <button className={styles.primaryBtn} onClick={() => alert(`Opening Edit Profile for ${beneficiary.fullName}`)}>
             <Edit size={16} />
             <span>Edit Profile</span>
           </button>

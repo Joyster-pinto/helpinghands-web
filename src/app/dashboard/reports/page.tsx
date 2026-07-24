@@ -182,7 +182,7 @@ export default function ReportsPage() {
               onChange={(e) => setDateRange({...dateRange, to: e.target.value})}
             />
           </div>
-          <button className={styles.btnPrimary} onClick={() => alert(`Report generated for ${selectedType}!`)}>
+          <button className={styles.btnPrimary} onClick={() => alert(`Report updated for ${selectedType.toUpperCase()} module (${dateRange.from || 'All dates'} to ${dateRange.to || 'Today'})`)}>
             Generate Report
           </button>
         </div>
@@ -197,11 +197,8 @@ export default function ReportsPage() {
             <button className={styles.btnExport} onClick={handleExportPDF}>
               <Printer size={16} /> PDF Print
             </button>
-            <button className={styles.btnExport} onClick={handleExportExcel}>
-              <FileSpreadsheet size={16} /> Excel
-            </button>
             <button className={styles.btnExport} onClick={handleExportCSV}>
-              <FileCode size={16} /> CSV
+              <FileCode size={16} /> Download CSV
             </button>
           </div>
         </div>

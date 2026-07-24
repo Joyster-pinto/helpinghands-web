@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './page.module.css';
 import { 
   Wallet, 
@@ -9,15 +9,32 @@ import {
   TrendingUp, 
   Plus, 
   Filter,
-  Download
+  Download,
+  X
 } from 'lucide-react';
-import { mockTransactions } from '@/data/mockData';
+import { mockTransactions as initialTransactions } from '@/data/mockData';
 
 // Chart component needs to be client-side
 import dynamic from 'next/dynamic';
 const IncomeExpenseChart = dynamic(() => import('./Chart'), { ssr: false });
 
 export default function AccountsPage() {
+  const [transactions, setTransactions] = useState(initialTransactions);
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const [formData, setFormData] = useState({
+    type: 'donation',
+    category: 'general_donation',
+    amount: '',
+    description: '',
+    paymentMode: 'upi',
+    receiptNumber: '',
+    paidTo: '',
+    receivedFrom: '',
+  });
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -27,16 +44,57 @@ export default function AccountsPage() {
   };
 
   // Calculate stats
-  const totalIncome = mockTransactions
+  const totalIncome = transactions
     .filter(t => t.type === 'donation' || t.type === 'member_contribution' || t.type === 'sponsorship')
     .reduce((sum, t) => sum + t.amount, 0);
     
-  const totalExpense = mockTransactions
+  const totalExpense = transactions
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const openingBalance = 150000; // Mock starting balance
+  const openingBalance = 150000;
   const closingBalance = openingBalance + totalIncome - totalExpense;
+
+  const filteredTransactions = transactions.filter(t => {
+    if (activeFilter === 'income') return t.type !== 'expense';
+    if (activeFilter === 'expense') return t.type === 'expense';
+    return true;
+  });
+
+  const handleExportCSV = () => {
+    let csv = 'Date,Description,Type,Payment Mode,Receipt Number,Amount (INR)\n';
+    transactions.forEach(tx => {
+      csv += `"${tx.date}","${tx.description}","${tx.type}","${tx.paymentMode}","${tx.receiptNumber || ''}",${tx.amount}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `HelpingHands_Financial_Transactions_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleAddSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newTx = {
+      id: `tx${transactions.length + 1}`,
+      date: new Date().toISOString().split('T')[0],
+      type: formData.type as any,
+      category: formData.category as any,
+      amount: Number(formData.amount) || 0,
+      description: formData.description,
+      paymentMode: formData.paymentMode as any,
+      receiptNumber: formData.receiptNumber || `REC-${Math.floor(1000 + Math.random() * 9000)}`,
+      recordedBy: 'Fr. Administrator',
+    };
+    setTransactions([newTx as any, ...transactions]);
+    setShowAddModal(false);
+    setFormData({ type: 'donation', category: 'general_donation', amount: '', description: '', paymentMode: 'upi', receiptNumber: '', paidTo: '', receivedFrom: '' });
+    alert('Transaction recorded successfully!');
+  };
 
   return (
     <div className={styles.container}>
@@ -46,11 +104,11 @@ export default function AccountsPage() {
           <p className={styles.subtitle}>Manage trust finances, donations, and expenses</p>
         </div>
         <div className={styles.actions}>
-          <button className={styles.btnSecondary}>
+          <button className={styles.btnSecondary} onClick={handleExportCSV}>
             <Download size={18} />
-            Export
+            Export CSV
           </button>
-          <button className={styles.btnPrimary}>
+          <button className={styles.btnPrimary} onClick={() => setShowAddModal(true)}>
             <Plus size={18} />
             Add Transaction
           </button>
@@ -110,10 +168,24 @@ export default function AccountsPage() {
         <div className={styles.tableSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Recent Transactions</h2>
-            <div className={styles.filters}>
-              <button className={styles.filterBtn}>
-                <Filter size={16} />
-                Filter
+            <div className={styles.filters} style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                className={`${styles.filterBtn} ${activeFilter === 'all' ? styles.activeFilterBtn : ''}`}
+                onClick={() => setActiveFilter('all')}
+              >
+                All
+              </button>
+              <button 
+                className={`${styles.filterBtn} ${activeFilter === 'income' ? styles.activeFilterBtn : ''}`}
+                onClick={() => setActiveFilter('income')}
+              >
+                Income
+              </button>
+              <button 
+                className={`${styles.filterBtn} ${activeFilter === 'expense' ? styles.activeFilterBtn : ''}`}
+                onClick={() => setActiveFilter('expense')}
+              >
+                Expenses
               </button>
             </div>
           </div>
@@ -131,7 +203,7 @@ export default function AccountsPage() {
                 </tr>
               </thead>
               <tbody>
-                {mockTransactions.map((tx) => (
+                {filteredTransactions.map((tx) => (
                   <tr key={tx.id}>
                     <td>{new Date(tx.date).toLocaleDateString()}</td>
                     <td>{tx.description}</td>
@@ -152,6 +224,62 @@ export default function AccountsPage() {
           </div>
         </div>
       </div>
+
+      {/* Add Transaction Modal */}
+      {showAddModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalCard}>
+            <div className={styles.modalHeader}>
+              <h2>Record Financial Transaction</h2>
+              <button className={styles.closeBtn} onClick={() => setShowAddModal(false)}><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleAddSubmit} className={styles.modalForm}>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Transaction Type *</label>
+                  <select className="input select" value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})}>
+                    <option value="donation">General Donation (Income)</option>
+                    <option value="sponsorship">Sponsorship Payment (Income)</option>
+                    <option value="member_contribution">Member Contribution (Income)</option>
+                    <option value="expense">Trust Expense</option>
+                  </select>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Amount (₹) *</label>
+                  <input type="number" required placeholder="e.g. 15000" className="input" value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})} />
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Description / Notes *</label>
+                <input type="text" required placeholder="e.g. Tuition Fee Payment - Kamarajar Scheme" className="input" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} />
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Payment Mode *</label>
+                  <select className="input select" value={formData.paymentMode} onChange={(e) => setFormData({...formData, paymentMode: e.target.value})}>
+                    <option value="upi">UPI / GPay / PhonePe</option>
+                    <option value="bank_transfer">Direct Bank NEFT / RTGS</option>
+                    <option value="cheque">Cheque</option>
+                    <option value="cash">Cash</option>
+                  </select>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Receipt / Transaction Ref Number</label>
+                  <input type="text" placeholder="e.g. UPI/1293849102" className="input" value={formData.receiptNumber} onChange={(e) => setFormData({...formData, receiptNumber: e.target.value})} />
+                </div>
+              </div>
+
+              <div className={styles.modalActions}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Save Transaction</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
