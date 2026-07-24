@@ -37,7 +37,7 @@ export default function Sidebar() {
       items: [
         { label: "Beneficiaries", href: "/dashboard/beneficiaries", icon: GraduationCap },
         { label: "Members", href: "/dashboard/members", icon: Users },
-        { label: "Sponsors", href: "/dashboard/sponsors", icon: Heart },
+        { label: "Sponsors", href: "/dashboard/sponsorships", icon: Heart },
         { label: "Alumni", href: "/dashboard/alumni", icon: Award },
       ]
     },
