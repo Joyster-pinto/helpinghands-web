@@ -48,6 +48,17 @@ export const mockUsers: User[] = [
     lastLogin: '2026-07-20T09:00:00Z',
     createdAt: '2024-06-01T00:00:00Z',
   },
+  {
+    id: 'u5',
+    name: 'Alumni User',
+    email: 'alumni@helpinghands-team.org',
+    password: 'alumni123',
+    role: 'alumni',
+    phone: '+91 98765 43214',
+    isActive: true,
+    lastLogin: '2026-07-24T12:00:00Z',
+    createdAt: '2024-07-01T00:00:00Z',
+  },
 ];
 
 // ============================================================

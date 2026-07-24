@@ -7,6 +7,7 @@ const mockUsers = [
   { id: 'u2', name: 'John Treasurer', email: 'treasurer@helpinghands-team.org', password: 'treasurer123', role: 'treasurer', phone: '+91 98419 29298', isActive: true },
   { id: 'u3', name: 'Mary Member', email: 'member@helpinghands-team.org', password: 'member123', role: 'trust_member', phone: '+91 98419 29297', isActive: true },
   { id: 'u4', name: 'Peter Auditor', email: 'auditor@helpinghands-team.org', password: 'auditor123', role: 'auditor', phone: '+91 98419 29296', isActive: true },
+  { id: 'u5', name: 'Alumni User', email: 'alumni@helpinghands-team.org', password: 'alumni123', role: 'alumni', phone: '+91 98419 29295', isActive: true },
 ];
 
 const mockBeneficiaries = [
