@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import styles from './page.module.css';
 import { 
   GraduationCap,
@@ -7,19 +9,76 @@ import {
   Award,
   Search,
   Plus,
-  HeartHandshake,
-  BookOpen
+  Heart,
+  BookOpen,
+  X,
+  Mail,
+  Phone
 } from 'lucide-react';
 import { Linkedin } from '@/components/icons/SocialIcons';
-import { mockAlumni } from '@/data/mockData';
+import { mockAlumni as initialAlumni } from '@/data/mockData';
 
 export default function AlumniPage() {
+  const [alumniList, setAlumniList] = useState(initialAlumni);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [selectedAlumni, setSelectedAlumni] = useState<any>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    graduationYear: '2024',
+    scheme: 'Dr. Kalam Scholarship Scheme (College)',
+    institution: '',
+    degree: '',
+    currentStatus: 'employed',
+    currentOrganization: '',
+    currentRole: '',
+    location: '',
+  });
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0
     }).format(amount);
+  };
+
+  const filteredAlumni = alumniList.filter(a => {
+    const matchesSearch = a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      a.institution.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      a.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = !statusFilter || a.currentStatus === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleAddSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newAlumnus = {
+      id: `al${alumniList.length + 1}`,
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      graduationYear: formData.graduationYear,
+      scheme: 'college',
+      institution: formData.institution,
+      degree: formData.degree,
+      currentStatus: formData.currentStatus,
+      currentOrganization: formData.currentOrganization,
+      currentRole: formData.currentRole,
+      location: formData.location,
+      achievements: ['Graduated successfully with Trust support'],
+      isMentor: false,
+      isVolunteer: true,
+      totalContributions: 0,
+    };
+    setAlumniList([newAlumnus as any, ...alumniList]);
+    setShowAddModal(false);
+    setFormData({ name: '', email: '', phone: '', graduationYear: '2024', scheme: 'Dr. Kalam Scholarship Scheme (College)', institution: '', degree: '', currentStatus: 'employed', currentOrganization: '', currentRole: '', location: '' });
+    alert('Alumnus added to directory!');
   };
 
   return (
@@ -29,7 +88,7 @@ export default function AlumniPage() {
           <h1 className={styles.title}>Alumni Directory</h1>
           <p className={styles.subtitle}>Track and engage with past beneficiaries</p>
         </div>
-        <button className={styles.btnPrimary}>
+        <button className={styles.btnPrimary} onClick={() => setShowAddModal(true)}>
           <Plus size={18} />
           Add Alumni
         </button>
@@ -38,15 +97,16 @@ export default function AlumniPage() {
       <div className={styles.toolbar}>
         <div className={styles.searchBox}>
           <Search size={18} className={styles.searchIcon} />
-          <input type="text" placeholder="Search alumni by name, field or location..." className={styles.searchInput} />
+          <input 
+            type="text" 
+            placeholder="Search alumni by name, institution or location..." 
+            className={styles.searchInput} 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
         <div className={styles.filters}>
-          <select className={styles.select}>
-            <option value="">All Schemes</option>
-            <option value="vidya_vikas">Vidya Vikas</option>
-            <option value="higher_edu">Higher Education</option>
-          </select>
-          <select className={styles.select}>
+          <select className={styles.select} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="">All Statuses</option>
             <option value="employed">Employed</option>
             <option value="studying">Studying</option>
@@ -56,8 +116,8 @@ export default function AlumniPage() {
       </div>
 
       <div className={styles.grid}>
-        {mockAlumni.map((alumnus) => (
-          <div key={alumnus.id} className={styles.card}>
+        {filteredAlumni.map((alumnus) => (
+          <div key={alumnus.id} className={styles.card} onClick={() => setSelectedAlumni(alumnus)}>
             <div className={styles.cardHeader}>
               <div className={styles.headerTop}>
                 <h3 className={styles.name}>{alumnus.name}</h3>
@@ -93,55 +153,148 @@ export default function AlumniPage() {
                 </div>
               </div>
 
-              {alumnus.achievements.length > 0 && (
+              {alumnus.achievements && alumnus.achievements.length > 0 && (
                 <div className={styles.achievements}>
                   <h4 className={styles.sectionTitle}>Achievements</h4>
                   <ul className={styles.list}>
                     {alumnus.achievements.map((ach, idx) => (
-                      <li key={idx}>
-                        <Award size={14} className={styles.listIcon} />
-                        {ach}
-                      </li>
+                      <li key={idx}>{ach}</li>
                     ))}
                   </ul>
                 </div>
               )}
-
-              <div className={styles.engagement}>
-                {alumnus.isMentor && (
-                  <div className={styles.engagementBadge}>
-                    <BookOpen size={14} /> Mentor
-                  </div>
-                )}
-                {alumnus.isVolunteer && (
-                  <div className={styles.engagementBadge}>
-                    <HeartHandshake size={14} /> Volunteer
-                  </div>
-                )}
-              </div>
             </div>
             
             <div className={styles.cardFooter}>
-              <div className={styles.contributions}>
-                {alumnus.totalContributions && alumnus.totalContributions > 0 ? (
-                  <span>Contributed: <strong>{formatCurrency(alumnus.totalContributions)}</strong></span>
-                ) : (
-                  <span className={styles.textMuted}>No contributions yet</span>
-                )}
+              <div className={styles.tags}>
+                {alumnus.isMentor && <span className={styles.tag}>Mentor</span>}
+                {alumnus.isVolunteer && <span className={styles.tag}>Volunteer</span>}
               </div>
-              
-              <div className={styles.actions}>
-                {alumnus.linkedIn && (
-                  <a href={alumnus.linkedIn} target="_blank" rel="noopener noreferrer" className={styles.socialLink}>
-                    <Linkedin size={18} />
-                  </a>
-                )}
-                <button className={styles.btnText}>View Full Profile</button>
-              </div>
+              <button className={styles.btnText}>View Profile</button>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Alumni Detail Profile Modal */}
+      {selectedAlumni && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalCard}>
+            <div className={styles.modalHeader}>
+              <div>
+                <h2>{selectedAlumni.name}</h2>
+                <p className={styles.modalSub}>{selectedAlumni.degree} ({selectedAlumni.graduationYear}) — {selectedAlumni.institution}</p>
+              </div>
+              <button className={styles.closeBtn} onClick={() => setSelectedAlumni(null)}><X size={20} /></button>
+            </div>
+
+            <div className={styles.detailBody}>
+              <div className={styles.infoRow}>
+                <Briefcase size={16} /> <span>{selectedAlumni.currentRole} at {selectedAlumni.currentOrganization || 'Independent'}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <MapPin size={16} /> <span>{selectedAlumni.location}</span>
+              </div>
+              {selectedAlumni.email && (
+                <div className={styles.infoRow}>
+                  <Mail size={16} /> <span>{selectedAlumni.email}</span>
+                </div>
+              )}
+              {selectedAlumni.phone && (
+                <div className={styles.infoRow}>
+                  <Phone size={16} /> <span>{selectedAlumni.phone}</span>
+                </div>
+              )}
+              {selectedAlumni.totalContributions > 0 && (
+                <div className={styles.infoRow}>
+                  <Award size={16} /> <span>Contributions back to Trust: {formatCurrency(selectedAlumni.totalContributions)}</span>
+                </div>
+              )}
+
+              {selectedAlumni.achievements && selectedAlumni.achievements.length > 0 && (
+                <div style={{ marginTop: '20px' }}>
+                  <h4>Key Achievements & Career Growth</h4>
+                  <ul className={styles.detailList}>
+                    {selectedAlumni.achievements.map((ach: string, idx: number) => (
+                      <li key={idx}>✓ {ach}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            <div className={styles.modalActions}>
+              <button className="btn btn-primary" onClick={() => setSelectedAlumni(null)}>Close Profile</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Alumni Modal */}
+      {showAddModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalCard}>
+            <div className={styles.modalHeader}>
+              <h2>Add Alumnus Profile</h2>
+              <button className={styles.closeBtn} onClick={() => setShowAddModal(false)}><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleAddSubmit} className={styles.modalForm}>
+              <div className={styles.formGroup}>
+                <label>Full Name *</label>
+                <input type="text" required placeholder="Enter alumnus name" className="input" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Degree / Qualification *</label>
+                  <input type="text" required placeholder="e.g. B.E. Computer Science" className="input" value={formData.degree} onChange={(e) => setFormData({...formData, degree: e.target.value})} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Graduation Year *</label>
+                  <input type="text" required placeholder="e.g. 2024" className="input" value={formData.graduationYear} onChange={(e) => setFormData({...formData, graduationYear: e.target.value})} />
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Institution Name *</label>
+                <input type="text" required placeholder="College or university name" className="input" value={formData.institution} onChange={(e) => setFormData({...formData, institution: e.target.value})} />
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Current Status *</label>
+                  <select className="input select" value={formData.currentStatus} onChange={(e) => setFormData({...formData, currentStatus: e.target.value})}>
+                    <option value="employed">Employed</option>
+                    <option value="studying">Higher Studies</option>
+                    <option value="self_employed">Self Employed</option>
+                  </select>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Current Location *</label>
+                  <input type="text" required placeholder="e.g. Chennai / Bengaluru" className="input" value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} />
+                </div>
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Organization / Company</label>
+                  <input type="text" placeholder="Company or university" className="input" value={formData.currentOrganization} onChange={(e) => setFormData({...formData, currentOrganization: e.target.value})} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Role / Position</label>
+                  <input type="text" placeholder="Designation / Role" className="input" value={formData.currentRole} onChange={(e) => setFormData({...formData, currentRole: e.target.value})} />
+                </div>
+              </div>
+
+              <div className={styles.modalActions}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Save Alumnus</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

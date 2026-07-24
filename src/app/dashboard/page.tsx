@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import styles from "./page.module.css";
 import { 
   Users, 
@@ -205,22 +206,22 @@ export default function DashboardHome() {
         <div className={styles.quickActionsCard}>
           <h3 className={styles.cardTitle}>Quick Actions</h3>
           <div className={styles.actionGrid}>
-            <button className={styles.actionGridItem}>
+            <Link href="/dashboard/beneficiaries/new" className={styles.actionGridItem}>
               <div className={styles.actionIcon}><UserPlus size={20} /></div>
               <span>New Beneficiary</span>
-            </button>
-            <button className={styles.actionGridItem}>
+            </Link>
+            <Link href="/dashboard/accounts" className={styles.actionGridItem}>
               <div className={styles.actionIcon}><ArrowRightLeft size={20} /></div>
               <span>Record Transaction</span>
-            </button>
-            <button className={styles.actionGridItem}>
+            </Link>
+            <Link href="/dashboard/meetings" className={styles.actionGridItem}>
               <div className={styles.actionIcon}><Calendar size={20} /></div>
               <span>Schedule Meeting</span>
-            </button>
-            <button className={styles.actionGridItem}>
+            </Link>
+            <Link href="/dashboard/reports" className={styles.actionGridItem}>
               <div className={styles.actionIcon}><FileBarChart size={20} /></div>
               <span>Generate Report</span>
-            </button>
+            </Link>
           </div>
         </div>
       </div>

@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import styles from './page.module.css';
 import { 
   Users, 
@@ -8,11 +10,29 @@ import {
   List, 
   Mail, 
   Phone,
-  Award
+  Award,
+  X,
+  MapPin,
+  Calendar
 } from 'lucide-react';
-import { mockMembers } from '@/data/mockData';
+import { mockMembers as initialMembers } from '@/data/mockData';
 
 export default function MembersPage() {
+  const [members, setMembers] = useState(initialMembers);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: '',
+    designation: 'Trustee',
+    email: '',
+    phone: '',
+    occupation: '',
+    address: '',
+    bio: '',
+  });
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -25,6 +45,33 @@ export default function MembersPage() {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
   };
 
+  const filteredMembers = members.filter(m => 
+    m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    m.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    m.designation.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleAddSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newMember = {
+      id: `m${members.length + 1}`,
+      name: formData.name,
+      designation: formData.designation,
+      status: 'active',
+      email: formData.email,
+      phone: formData.phone,
+      address: formData.address,
+      joinDate: new Date().toISOString().split('T')[0],
+      occupation: formData.occupation,
+      totalContributions: 0,
+      bio: formData.bio || 'Active trust member supporting educational initiatives.',
+    };
+    setMembers([newMember as any, ...members]);
+    setShowAddModal(false);
+    setFormData({ name: '', designation: 'Trustee', email: '', phone: '', occupation: '', address: '', bio: '' });
+    alert('New member added successfully!');
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -33,7 +80,7 @@ export default function MembersPage() {
           <p className={styles.subtitle}>Manage trust members, core committee, and active volunteers</p>
         </div>
         <div className={styles.actions}>
-          <button className={styles.btnPrimary}>
+          <button className={styles.btnPrimary} onClick={() => setShowAddModal(true)}>
             <Plus size={18} />
             Add Member
           </button>
@@ -43,17 +90,19 @@ export default function MembersPage() {
       <div className={styles.toolbar}>
         <div className={styles.searchBox}>
           <Search size={18} className={styles.searchIcon} />
-          <input type="text" placeholder="Search members by name, email or role..." className={styles.searchInput} />
-        </div>
-        <div className={styles.viewToggle}>
-          <button className={`${styles.toggleBtn} ${styles.active}`}><LayoutGrid size={18} /></button>
-          <button className={styles.toggleBtn}><List size={18} /></button>
+          <input 
+            type="text" 
+            placeholder="Search members by name, email or designation..." 
+            className={styles.searchInput} 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
       </div>
 
       <div className={styles.grid}>
-        {mockMembers.map((member) => (
-          <div key={member.id} className={styles.card}>
+        {filteredMembers.map((member) => (
+          <div key={member.id} className={styles.card} onClick={() => setSelectedMember(member)}>
             <div className={styles.cardHeader}>
               <div className={styles.avatar}>
                 {getInitials(member.name)}
@@ -97,6 +146,111 @@ export default function MembersPage() {
           </div>
         ))}
       </div>
+
+      {/* Member Profile Modal */}
+      {selectedMember && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalCard}>
+            <div className={styles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div className={styles.avatar} style={{ width: '50px', height: '50px', fontSize: '20px' }}>
+                  {getInitials(selectedMember.name)}
+                </div>
+                <div>
+                  <h2>{selectedMember.name}</h2>
+                  <p className={styles.modalSub}>{selectedMember.designation.replace('_', ' ').toUpperCase()}</p>
+                </div>
+              </div>
+              <button className={styles.closeBtn} onClick={() => setSelectedMember(null)}><X size={20} /></button>
+            </div>
+
+            <div className={styles.detailBody}>
+              <div className={styles.infoRow}>
+                <Mail size={16} /> <span>{selectedMember.email}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <Phone size={16} /> <span>{selectedMember.phone}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <MapPin size={16} /> <span>{selectedMember.address}</span>
+              </div>
+              <div className={styles.infoRow}>
+                <Calendar size={16} /> <span>Joined: {new Date(selectedMember.joinDate).toLocaleDateString()}</span>
+              </div>
+              {selectedMember.totalContributions && (
+                <div className={styles.infoRow}>
+                  <Award size={16} /> <span>Total Contributions: {formatCurrency(selectedMember.totalContributions)}</span>
+                </div>
+              )}
+
+              <div style={{ marginTop: '20px' }}>
+                <h4>Biography & Background</h4>
+                <p className={styles.bioText}>{selectedMember.bio}</p>
+              </div>
+            </div>
+
+            <div className={styles.modalActions}>
+              <button className="btn btn-primary" onClick={() => setSelectedMember(null)}>Close Profile</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Member Modal */}
+      {showAddModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalCard}>
+            <div className={styles.modalHeader}>
+              <h2>Add New Trust Member</h2>
+              <button className={styles.closeBtn} onClick={() => setShowAddModal(false)}><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleAddSubmit} className={styles.modalForm}>
+              <div className={styles.formGroup}>
+                <label>Full Name *</label>
+                <input type="text" required placeholder="Enter member name" className="input" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Designation *</label>
+                  <input type="text" required placeholder="e.g. Trustee / Secretary" className="input" value={formData.designation} onChange={(e) => setFormData({...formData, designation: e.target.value})} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Occupation</label>
+                  <input type="text" placeholder="e.g. Software Engineer" className="input" value={formData.occupation} onChange={(e) => setFormData({...formData, occupation: e.target.value})} />
+                </div>
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Email *</label>
+                  <input type="email" required placeholder="member@email.com" className="input" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Phone *</label>
+                  <input type="tel" required placeholder="+91 98765 43210" className="input" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} />
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Address</label>
+                <input type="text" placeholder="City / District" className="input" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Bio / Notes</label>
+                <textarea rows={3} placeholder="Brief bio..." className="input textarea" value={formData.bio} onChange={(e) => setFormData({...formData, bio: e.target.value})} />
+              </div>
+
+              <div className={styles.modalActions}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Save Member</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

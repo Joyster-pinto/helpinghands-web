@@ -99,7 +99,10 @@ export default function Sidebar() {
       </div>
 
       <div className={styles.footer}>
-        <button className={styles.logoutBtn} onClick={() => signOut({ callbackUrl: "/login" })}>
+        <button 
+          className={styles.logoutBtn} 
+          onClick={() => signOut({ callbackUrl: typeof window !== "undefined" ? `${window.location.origin}/login` : "/login" })}
+        >
           <LogOut size={20} />
           {!collapsed && <span>Sign Out</span>}
         </button>

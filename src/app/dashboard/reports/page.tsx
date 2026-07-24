@@ -10,7 +10,10 @@ import {
   Calendar, 
   Heart,
   GraduationCap,
-  Briefcase
+  Briefcase,
+  Printer,
+  FileSpreadsheet,
+  FileCode
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -24,7 +27,7 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { mockBeneficiaries, mockTransactions, mockActivities } from '@/data/mockData';
+import { mockBeneficiaries, mockTransactions, mockActivities, mockMembers, mockSponsors, mockAlumni } from '@/data/mockData';
 
 const reportTypes = [
   { id: 'financial', title: 'Financial Report', icon: Wallet },
@@ -76,6 +79,64 @@ export default function ReportsPage() {
     }).format(amount);
   };
 
+  // --- Export Generators ---
+  const downloadFile = (content: string, filename: string, type: string) => {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportCSV = () => {
+    let csv = '';
+    if (selectedType === 'financial') {
+      csv = 'Date,Description,Type,Category,Amount (INR),Payment Mode\n';
+      mockTransactions.forEach(t => {
+        csv += `"${t.date}","${t.description}","${t.type}","${t.category}",${t.amount},"${t.paymentMode}"\n`;
+      });
+    } else if (selectedType === 'beneficiary') {
+      csv = 'ID,Full Name,Scheme,Status,Institution,Class,Total Support (INR)\n';
+      mockBeneficiaries.forEach(b => {
+        csv += `"${b.id}","${b.fullName}","${b.scheme}","${b.status}","${b.currentInstitution}","${b.currentClass}",${b.totalSupportReceived}\n`;
+      });
+    } else if (selectedType === 'activity') {
+      csv = 'Title,Date,Location,Status,Budget (INR),Actual Spent (INR),Beneficiaries Covered\n';
+      mockActivities.forEach(a => {
+        csv += `"${a.title}","${a.date}","${a.location}","${a.status}",${a.budget},${a.actualSpent},${a.beneficiariesCovered}\n`;
+      });
+    } else if (selectedType === 'sponsorship') {
+      csv = 'Sponsor Name,Type,Email,Committed (INR),Paid (INR),Beneficiaries Count\n';
+      mockSponsors.forEach(s => {
+        csv += `"${s.name}","${s.type}","${s.email}",${s.totalCommitted},${s.totalPaid},${s.beneficiaries ? s.beneficiaries.length : 0}\n`;
+      });
+    } else if (selectedType === 'alumni') {
+      csv = 'Name,Degree,Institution,Graduation Year,Status,Role,Organization\n';
+      mockAlumni.forEach(al => {
+        csv += `"${al.name}","${al.degree}","${al.institution}","${al.graduationYear}","${al.currentStatus}","${al.currentRole}","${al.currentOrganization}"\n`;
+      });
+    } else {
+      csv = 'Name,Designation,Email,Phone,Status,Total Contributions (INR)\n';
+      mockMembers.forEach(m => {
+        csv += `"${m.name}","${m.designation}","${m.email}","${m.phone}","${m.status}",${m.totalContributions}\n`;
+      });
+    }
+    downloadFile(csv, `HelpingHands_${selectedType}_Report.csv`, 'text/csv;charset=utf-8;');
+  };
+
+  const handleExportExcel = () => {
+    // Standard Excel-compatible TSV/CSV format
+    handleExportCSV();
+  };
+
+  const handleExportPDF = () => {
+    window.print();
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -121,7 +182,9 @@ export default function ReportsPage() {
               onChange={(e) => setDateRange({...dateRange, to: e.target.value})}
             />
           </div>
-          <button className={styles.btnPrimary}>Generate Report</button>
+          <button className={styles.btnPrimary} onClick={() => alert(`Report generated for ${selectedType}!`)}>
+            Generate Report
+          </button>
         </div>
       </div>
 
@@ -131,9 +194,15 @@ export default function ReportsPage() {
             {reportTypes.find(t => t.id === selectedType)?.title}
           </h2>
           <div className={styles.exportActions}>
-            <button className={styles.btnExport}><Download size={16} /> PDF</button>
-            <button className={styles.btnExport}><Download size={16} /> Excel</button>
-            <button className={styles.btnExport}><Download size={16} /> CSV</button>
+            <button className={styles.btnExport} onClick={handleExportPDF}>
+              <Printer size={16} /> PDF Print
+            </button>
+            <button className={styles.btnExport} onClick={handleExportExcel}>
+              <FileSpreadsheet size={16} /> Excel
+            </button>
+            <button className={styles.btnExport} onClick={handleExportCSV}>
+              <FileCode size={16} /> CSV
+            </button>
           </div>
         </div>
 
@@ -208,8 +277,8 @@ export default function ReportsPage() {
         {(selectedType !== 'financial' && selectedType !== 'beneficiary') && (
           <div className={styles.placeholderState}>
             <BarChart size={48} className={styles.placeholderIcon} />
-            <h3>Select specific date range to view detailed analytics</h3>
-            <p>Data visualization for this report type will appear here.</p>
+            <h3>Summary Report for {reportTypes.find(t => t.id === selectedType)?.title}</h3>
+            <p>Click PDF, Excel, or CSV above to download the full detailed dataset for this section.</p>
           </div>
         )}
       </div>
