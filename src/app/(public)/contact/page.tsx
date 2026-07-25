@@ -1,12 +1,48 @@
 "use client";
 
 import React, { useState } from 'react';
-import { MapPin, Phone, Mail, Clock, Send, CheckCircle2 } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Send, CheckCircle2, MessageSquare, Smartphone } from 'lucide-react';
 import { Facebook, Twitter, Linkedin } from '@/components/icons/SocialIcons';
 import styles from './page.module.css';
 
 export default function ContactPage() {
-  const [submitted, setSubmitted] = useState(false);
+  const [submittedData, setSubmittedData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    subject: 'General Inquiry',
+    message: '',
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSubmittedData({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          refId: data.refId,
+          message: data.message,
+        });
+      } else {
+        alert(data.error || 'Failed to submit message.');
+      }
+    } catch (err) {
+      alert('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className={styles.wrapper}>
@@ -72,48 +108,101 @@ export default function ContactPage() {
                 <h3>Send Us A Message</h3>
                 <p className={styles.formSub}>We respond within 24 hours on working days.</p>
 
-                {submitted ? (
+                {submittedData ? (
                   <div className={styles.successMessage}>
-                    <CheckCircle2 size={48} className={styles.successIcon} />
-                    <h4>Message Sent Successfully!</h4>
-                    <p>Thank you for reaching out to Helping Hands Team Trust. We will get back to you shortly.</p>
-                    <button className="btn btn-primary" onClick={() => setSubmitted(false)}>Send Another Message</button>
+                    <CheckCircle2 size={52} className={styles.successIcon} color="#28a745" />
+                    <h4>Message Sent & Query Recorded!</h4>
+                    <p className={styles.refCode}>Ref Number: <strong>{submittedData.refId}</strong></p>
+                    
+                    <div style={{ background: '#e8f0fe', padding: '15px', borderRadius: '10px', marginTop: '15px', textAlign: 'left', borderLeft: '4px solid #1a73e8' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, color: '#1a73e8', marginBottom: '4px' }}>
+                        <Mail size={16} /> Confirmation Email Dispatched
+                      </div>
+                      <p style={{ fontSize: '13px', color: '#3c4043', margin: 0 }}>
+                        A confirmation receipt has been sent to <strong>{submittedData.email}</strong>.
+                      </p>
+                    </div>
+
+                    <div style={{ background: '#e6f4ea', padding: '15px', borderRadius: '10px', marginTop: '10px', textAlign: 'left', borderLeft: '4px solid #28a745' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, color: '#137333', marginBottom: '4px' }}>
+                        <Smartphone size={16} /> SMS Notification Triggered
+                      </div>
+                      <p style={{ fontSize: '13px', color: '#3c4043', margin: 0 }}>
+                        SMS acknowledgement delivered to <strong>{submittedData.phone}</strong>. Our core team and admin have been notified.
+                      </p>
+                    </div>
+
+                    <button className="btn btn-primary" style={{ marginTop: '20px' }} onClick={() => { setSubmittedData(null); setFormData({ name: '', email: '', phone: '', subject: 'General Inquiry', message: '' }); }}>
+                      Send Another Message
+                    </button>
                   </div>
                 ) : (
-                  <form onSubmit={(e) => { e.preventDefault(); setSubmitted(true); }} className={styles.form}>
+                  <form onSubmit={handleSubmit} className={styles.form}>
                     <div className={styles.formGroup}>
                       <label>Your Name *</label>
-                      <input type="text" required placeholder="Enter your full name" className="input" />
+                      <input 
+                        type="text" 
+                        required 
+                        placeholder="Enter your full name" 
+                        className="input" 
+                        value={formData.name}
+                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      />
                     </div>
 
                     <div className={styles.formRow}>
                       <div className={styles.formGroup}>
                         <label>Email Address *</label>
-                        <input type="email" required placeholder="your.email@example.com" className="input" />
+                        <input 
+                          type="email" 
+                          required 
+                          placeholder="your.email@example.com" 
+                          className="input" 
+                          value={formData.email}
+                          onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        />
                       </div>
                       <div className={styles.formGroup}>
                         <label>Phone Number *</label>
-                        <input type="tel" required placeholder="+91 98765 43210" className="input" />
+                        <input 
+                          type="tel" 
+                          required 
+                          placeholder="+91 98765 43210" 
+                          className="input" 
+                          value={formData.phone}
+                          onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                        />
                       </div>
                     </div>
 
                     <div className={styles.formGroup}>
                       <label>Subject *</label>
-                      <select className="input select">
-                        <option value="general">General Inquiry</option>
-                        <option value="scholarship">Scholarship & Student Query</option>
-                        <option value="sponsorship">Sponsorship & Donations</option>
-                        <option value="volunteer">Volunteering Opportunity</option>
+                      <select 
+                        className="input select"
+                        value={formData.subject}
+                        onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                      >
+                        <option value="General Inquiry">General Inquiry</option>
+                        <option value="Scholarship & Student Query">Scholarship & Student Query</option>
+                        <option value="Sponsorship & Donations">Sponsorship & Donations</option>
+                        <option value="Volunteering Opportunity">Volunteering Opportunity</option>
                       </select>
                     </div>
 
                     <div className={styles.formGroup}>
                       <label>Message *</label>
-                      <textarea rows={4} required placeholder="Write your message here..." className="input textarea" />
+                      <textarea 
+                        rows={4} 
+                        required 
+                        placeholder="Write your message here..." 
+                        className="input textarea" 
+                        value={formData.message}
+                        onChange={(e) => setFormData({...formData, message: e.target.value})}
+                      />
                     </div>
 
-                    <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }}>
-                      Send Message
+                    <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={loading}>
+                      {loading ? 'Sending & Saving Query...' : 'Send Message'}
                     </button>
                   </form>
                 )}

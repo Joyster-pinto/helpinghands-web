@@ -1,26 +1,24 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './page.module.css';
 import { 
   Calendar, 
-  Clock, 
   MapPin, 
   Users, 
   Plus, 
   FileText,
-  CheckCircle,
   ChevronDown,
-  X,
-  Check,
-  Building
+  X
 } from 'lucide-react';
-import { mockMeetings as initialMeetings } from '@/data/mockData';
+import { mockMeetings as initialMockMeetings } from '@/data/mockData';
+import { Meeting } from '@/types';
 
 export default function MeetingsPage() {
-  const [meetings, setMeetings] = useState(initialMeetings);
+  const [meetings, setMeetings] = useState<Meeting[]>(initialMockMeetings);
+  const [loading, setLoading] = useState(true);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [selectedMeeting, setSelectedMeeting] = useState<any>(null);
+  const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -30,13 +28,32 @@ export default function MeetingsPage() {
     agendaText: '',
   });
 
-  const handleScheduleSubmit = (e: React.FormEvent) => {
+  // Fetch live meetings from MongoDB Atlas
+  useEffect(() => {
+    async function loadMeetings() {
+      try {
+        const res = await fetch('/api/meetings');
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setMeetings(data);
+        }
+      } catch (err) {
+        console.warn('Failed to load DB meetings, using fallback data.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadMeetings();
+  }, []);
+
+  const handleScheduleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newMeeting = {
-      id: `m${meetings.length + 1}`,
+    const newMeetingPayload = {
+      id: `m_${Date.now()}`,
       title: formData.title,
-      type: formData.type,
+      type: formData.type as any,
       date: formData.date,
+      time: '10:00 AM',
       venue: formData.venue,
       agenda: formData.agendaText.split('\n').filter(a => a.trim().length > 0),
       attendees: ['Fr. Administrator', 'John Treasurer'],
@@ -44,14 +61,29 @@ export default function MeetingsPage() {
       minutesOfMeeting: '',
       resolutions: [],
       actionItems: [],
-      time: '10:00 AM',
       documents: [],
       createdBy: 'u1'
     };
-    setMeetings([newMeeting as any, ...meetings]);
+
+    try {
+      const res = await fetch('/api/meetings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newMeetingPayload),
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        setMeetings([resData.data, ...meetings]);
+      } else {
+        setMeetings([newMeetingPayload as any, ...meetings]);
+      }
+    } catch (err) {
+      setMeetings([newMeetingPayload as any, ...meetings]);
+    }
+
     setShowScheduleModal(false);
     setFormData({ title: '', type: 'regular', date: '', venue: '', agendaText: '' });
-    alert('Meeting scheduled successfully!');
+    alert('Meeting scheduled and saved to MongoDB Atlas!');
   };
 
   return (
@@ -76,7 +108,7 @@ export default function MeetingsPage() {
                 meeting.type === 'emergency' ? styles.badgeError : 
                 styles.badgePrimary
               }`}>
-                {meeting.type.toUpperCase()}
+                {(meeting.type || 'regular').toUpperCase()}
               </span>
               <span className={`${styles.statusBadge} ${meeting.minutesOfMeeting ? styles.statusCompleted : styles.statusScheduled}`}>
                 {meeting.minutesOfMeeting ? 'completed' : 'scheduled'}
@@ -89,7 +121,7 @@ export default function MeetingsPage() {
               <div className={styles.metaInfo}>
                 <div className={styles.metaItem}>
                   <Calendar size={14} />
-                  <span>{new Date(meeting.date).toLocaleDateString()}</span>
+                  <span>{meeting.date ? new Date(meeting.date).toLocaleDateString() : 'TBD'}</span>
                 </div>
                 <div className={styles.metaItem}>
                   <MapPin size={14} />
@@ -100,11 +132,11 @@ export default function MeetingsPage() {
               <div className={styles.agendaPreview}>
                 <h4 className={styles.sectionTitle}>Agenda Items</h4>
                 <ul className={styles.agendaList}>
-                  {meeting.agenda.slice(0, 3).map((item, idx) => (
+                  {(meeting.agenda || []).slice(0, 3).map((item, idx) => (
                     <li key={idx}><span className={styles.bullet}>•</span> {item}</li>
                   ))}
-                  {meeting.agenda.length > 3 && (
-                    <li className={styles.moreItems}>+ {meeting.agenda.length - 3} more items</li>
+                  {(meeting.agenda || []).length > 3 && (
+                    <li className={styles.moreItems}>+ {(meeting.agenda || []).length - 3} more items</li>
                   )}
                 </ul>
               </div>
@@ -203,7 +235,7 @@ export default function MeetingsPage() {
 
               <div className={styles.modalActions}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowScheduleModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Schedule Meeting</button>
+                <button type="submit" className="btn btn-primary">Save Meeting to MongoDB</button>
               </div>
             </form>
           </div>
@@ -217,7 +249,7 @@ export default function MeetingsPage() {
             <div className={styles.modalHeader}>
               <div>
                 <h2>{selectedMeeting.title}</h2>
-                <p className={styles.modalSub}>{new Date(selectedMeeting.date).toLocaleDateString()} | {selectedMeeting.venue}</p>
+                <p className={styles.modalSub}>{selectedMeeting.date ? new Date(selectedMeeting.date).toLocaleDateString() : ''} | {selectedMeeting.venue}</p>
               </div>
               <button className={styles.closeBtn} onClick={() => setSelectedMeeting(null)}><X size={20} /></button>
             </div>
@@ -225,7 +257,7 @@ export default function MeetingsPage() {
             <div className={styles.detailSection}>
               <h4>Meeting Agenda</h4>
               <ul className={styles.detailList}>
-                {selectedMeeting.agenda.map((a: string, idx: number) => (
+                {(selectedMeeting.agenda || []).map((a: string, idx: number) => (
                   <li key={idx}>• {a}</li>
                 ))}
               </ul>

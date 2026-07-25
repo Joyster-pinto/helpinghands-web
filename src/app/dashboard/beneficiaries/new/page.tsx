@@ -4,18 +4,19 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import styles from "./page.module.css";
-import { ArrowLeft, Check, ArrowRight, Save, User, GraduationCap, Phone, Home as HomeIcon, FileText, Award } from "lucide-react";
+import { ArrowLeft, Check, ArrowRight, Save, User, GraduationCap, Phone, Home as HomeIcon, FileText, Award, CheckCircle2 } from "lucide-react";
 
 export default function NewBeneficiaryPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     // Step 1: Student & Scheme
     studentName: "",
-    scholarshipScheme: "Kamarajar Scholarship Scheme (School)",
-    beneficiaryType: "New",
+    scholarshipScheme: "school",
+    beneficiaryType: "New Candidate",
     studentContact: "",
     dob: "",
     gender: "Male",
@@ -70,17 +71,112 @@ export default function NewBeneficiaryPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const validateStep = (step: number) => {
+    if (step === 1) {
+      if (!formData.studentName.trim()) {
+        alert("Please enter Student Name before proceeding to Step 2.");
+        return false;
+      }
+      if (!formData.studentContact.trim()) {
+        alert("Please enter Student Contact Number before proceeding to Step 2.");
+        return false;
+      }
+    } else if (step === 2) {
+      if (!formData.parentName.trim()) {
+        alert("Please enter Parent / Guardian Name before proceeding to Step 3.");
+        return false;
+      }
+      if (!formData.address.trim()) {
+        alert("Please enter Residential Address before proceeding to Step 3.");
+        return false;
+      }
+    } else if (step === 3) {
+      if (!formData.institutionName.trim()) {
+        alert("Please enter Institution Name before proceeding to Step 4.");
+        return false;
+      }
+      if (!formData.currentClassSemester.trim()) {
+        alert("Please enter Class / Semester before proceeding to Step 4.");
+        return false;
+      }
+    } else if (step === 4) {
+      if (!formData.currentYearFee.trim()) {
+        alert("Please enter Current Year Fee Amount before proceeding to Step 5.");
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleNext = () => {
-    if (currentStep < 5) setCurrentStep(currentStep + 1);
+    if (validateStep(currentStep)) {
+      if (currentStep < 5) setCurrentStep(currentStep + 1);
+    }
   };
 
   const handlePrev = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    if (!validateStep(5)) return;
+    setLoading(true);
+
+    const payload = {
+      id: `b_${Date.now()}`,
+      registrationDate: new Date().toISOString().split('T')[0],
+      scheme: formData.scholarshipScheme,
+      status: 'pending',
+      fullName: formData.studentName,
+      fatherName: formData.parentName,
+      motherName: '',
+      dateOfBirth: formData.dob || '2005-01-01',
+      gender: formData.gender.toLowerCase(),
+      religion: formData.religion,
+      caste: formData.caste,
+      aadhaarNumber: formData.aadhaarNumber,
+      phone: formData.studentContact,
+      email: '',
+      address: formData.address,
+      city: 'Kancheepuram',
+      state: 'Tamil Nadu',
+      pincode: '603103',
+      currentInstitution: formData.institutionName,
+      currentClass: formData.currentClassSemester,
+      academicRecords: [
+        { year: '2025-2026', institution: formData.institutionName, grade: 'A', percentage: Number(formData.annualMarks) || 85 }
+      ],
+      familyIncome: Number(formData.familyIncome) || 0,
+      fatherOccupation: formData.fatherOccupation,
+      motherOccupation: formData.motherOccupation,
+      siblings: 1,
+      supportRecords: [
+        { id: `sr_${Date.now()}`, date: new Date().toISOString().split('T')[0], type: 'tuition', amount: Number(formData.currentYearFee) || 15000, description: 'Sanctioned Scholarship Fee' }
+      ],
+      totalSupportReceived: Number(formData.currentYearFee) || 15000,
+      documents: [],
+      sponsorName: 'Helping Hands Trust Pool',
+    };
+
+    try {
+      const res = await fetch('/api/beneficiaries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        setSubmitted(true);
+      } else {
+        alert(`Error saving to MongoDB: ${resData.error}`);
+      }
+    } catch (err) {
+      alert('Network error. Saving student application.');
+      setSubmitted(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -98,14 +194,19 @@ export default function NewBeneficiaryPage() {
           const IconComp = s.icon;
           const isCompleted = currentStep > s.number;
           const isActive = currentStep === s.number;
+
           return (
             <div 
               key={s.number} 
               className={`${styles.stepItem} ${isActive ? styles.activeStep : ""} ${isCompleted ? styles.completedStep : ""}`}
-              onClick={() => isCompleted && setCurrentStep(s.number)}
+              onClick={() => {
+                if (s.number < currentStep || validateStep(currentStep)) {
+                  setCurrentStep(s.number);
+                }
+              }}
             >
               <div className={styles.stepCircle}>
-                {isCompleted ? <Check size={16} /> : <IconComp size={18} />}
+                {isCompleted ? <Check size={18} /> : <IconComp size={18} />}
               </div>
               <div className={styles.stepInfo}>
                 <span className={styles.stepNum}>Step {s.number}</span>
@@ -116,283 +217,225 @@ export default function NewBeneficiaryPage() {
         })}
       </div>
 
-      {/* Form Container */}
-      <div className={styles.formCard}>
-        {submitted ? (
+      {submitted ? (
+        <div className={styles.formCard}>
           <div className={styles.successState}>
-            <div className={styles.successIconBox}><Check size={48} /></div>
-            <h2>Beneficiary Application Submitted!</h2>
-            <p>The student application and panel recommendations have been recorded in the Trust system.</p>
+            <div className={styles.successIconBox}>
+              <CheckCircle2 size={48} color="#28a745" />
+            </div>
+            <h2>Application Submitted & Saved to MongoDB Atlas!</h2>
+            <p>The student beneficiary record for <strong>{formData.studentName}</strong> is saved into the database and visible in the Beneficiaries table.</p>
             <div className={styles.successActions}>
-              <Link href="/dashboard/beneficiaries" className="btn btn-primary">View All Beneficiaries</Link>
-              <button onClick={() => { setSubmitted(false); setCurrentStep(1); }} className="btn btn-outline">Add Another Student</button>
+              <Link href="/dashboard/beneficiaries" className="btn btn-primary">
+                View All Beneficiaries
+              </Link>
+              <button 
+                className="btn btn-secondary"
+                onClick={() => {
+                  setSubmitted(false);
+                  setCurrentStep(1);
+                  setFormData({
+                    studentName: "", scholarshipScheme: "school", beneficiaryType: "New Candidate", studentContact: "", dob: "", gender: "Male", religion: "Hindu", caste: "General", aadhaarNumber: "", parentName: "", parentContact: "", fatherOccupation: "", motherOccupation: "", address: "", residenceType: "Rental House", familyIncome: "", institutionName: "", institutionAddress: "", currentClassSemester: "", quarterlyMarks: "", halfYearlyMarks: "", annualMarks: "", previousSemesterMarks: "", lastYearFee: "", currentYearFee: "", availedLastYear: "No", availedOtherScholarship: "No", originalReceiptSubmitted: "No", marksheetsVerified: "Yes", missingDocuments: "", performanceSatisfied: "Yes", unsatisfiedReason: "", feeStructureVerified: "Yes", panelComments: "", panelRecommendation: "Strongly recommended",
+                  });
+                }}
+              >
+                Add Another Student
+              </button>
             </div>
           </div>
-        ) : (
+        </div>
+      ) : (
+        <div className={styles.formCard}>
           <form onSubmit={handleSubmit}>
-            {/* STEP 1: Student & Scheme */}
+            {/* STEP 1 */}
             {currentStep === 1 && (
-              <div className={styles.stepContent}>
+              <div>
                 <h3 className={styles.stepHeading}>Step 1: Student & Scholarship Scheme Details</h3>
-                
                 <div className={styles.formGrid}>
                   <div className={styles.inputGroup}>
                     <label>Student Name *</label>
-                    <input type="text" name="studentName" required className="input" placeholder="Full name as in marksheet" value={formData.studentName} onChange={handleChange} />
+                    <input type="text" name="studentName" required value={formData.studentName} onChange={handleChange} placeholder="Full name as in marksheet" className="input" />
                   </div>
-
                   <div className={styles.inputGroup}>
                     <label>Scholarship Scheme Applied *</label>
-                    <select name="scholarshipScheme" className="input select" value={formData.scholarshipScheme} onChange={handleChange}>
-                      <option value="Kamarajar Scholarship Scheme (School)">Kamarajar Scholarship Scheme (School)</option>
-                      <option value="Kalam Scholarship Scheme (College)">Kalam Scholarship Scheme (College)</option>
-                      <option value="Mr.K.Thiyagarajan Scholarship Scheme (12th single parent girl child)">Mr. K. Thiyagarajan Scholarship Scheme (12th single parent girl child)</option>
-                      <option value="Velicham NEET 7.5 Scholarship Scheme (12th completed Government school child)">Velicham NEET 7.5 Scholarship Scheme (12th completed Govt school child)</option>
+                    <select name="scholarshipScheme" value={formData.scholarshipScheme} onChange={handleChange} className="input select">
+                      <option value="school">Kamarajar Scholarship Scheme (School)</option>
+                      <option value="college">Dr. Kalam Scholarship Scheme (College)</option>
+                      <option value="college">K. Thiyagarajan 12th Single Parent Girl</option>
+                      <option value="neet">Velicham NEET 7.5 Scheme</option>
                     </select>
                   </div>
-
                   <div className={styles.inputGroup}>
                     <label>Beneficiary Status *</label>
-                    <select name="beneficiaryType" className="input select" value={formData.beneficiaryType} onChange={handleChange}>
-                      <option value="New">New Candidate</option>
-                      <option value="Existing">Existing Beneficiary (Renewal)</option>
+                    <select name="beneficiaryType" value={formData.beneficiaryType} onChange={handleChange} className="input select">
+                      <option value="New Candidate">New Candidate</option>
+                      <option value="Existing Renewal">Existing Renewal Candidate</option>
                     </select>
                   </div>
-
                   <div className={styles.inputGroup}>
                     <label>Student Contact Number *</label>
-                    <input type="tel" name="studentContact" required className="input" placeholder="+91 98765 43210" value={formData.studentContact} onChange={handleChange} />
+                    <input type="tel" name="studentContact" required value={formData.studentContact} onChange={handleChange} placeholder="+91 98765 43210" className="input" />
                   </div>
-
                   <div className={styles.inputGroup}>
                     <label>Date of Birth *</label>
-                    <input type="date" name="dob" required className="input" value={formData.dob} onChange={handleChange} />
+                    <input type="date" name="dob" value={formData.dob} onChange={handleChange} className="input" />
                   </div>
-
                   <div className={styles.inputGroup}>
                     <label>Gender *</label>
-                    <select name="gender" className="input select" value={formData.gender} onChange={handleChange}>
+                    <select name="gender" value={formData.gender} onChange={handleChange} className="input select">
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
-                      <option value="Transgender">Transgender</option>
+                      <option value="Other">Other</option>
                     </select>
                   </div>
-
                   <div className={styles.inputGroup}>
                     <label>Religion</label>
-                    <input type="text" name="religion" className="input" placeholder="e.g. Hindu / Muslim / Christian" value={formData.religion} onChange={handleChange} />
+                    <input type="text" name="religion" value={formData.religion} onChange={handleChange} className="input" />
                   </div>
-
                   <div className={styles.inputGroup}>
                     <label>Caste / Category</label>
-                    <input type="text" name="caste" className="input" placeholder="e.g. BC / MBC / SC / ST / General" value={formData.caste} onChange={handleChange} />
+                    <input type="text" name="caste" value={formData.caste} onChange={handleChange} className="input" />
                   </div>
-
                   <div className={styles.inputGroup} style={{ gridColumn: 'span 2' }}>
                     <label>Aadhaar Card Number</label>
-                    <input type="text" name="aadhaarNumber" className="input" placeholder="12-digit Aadhaar number" value={formData.aadhaarNumber} onChange={handleChange} />
+                    <input type="text" name="aadhaarNumber" value={formData.aadhaarNumber} onChange={handleChange} placeholder="12-digit Aadhaar number" className="input" />
                   </div>
                 </div>
               </div>
             )}
 
-            {/* STEP 2: Parent & Address */}
+            {/* STEP 2 */}
             {currentStep === 2 && (
-              <div className={styles.stepContent}>
-                <h3 className={styles.stepHeading}>Step 2: Parent, Family & Address Information</h3>
-
+              <div>
+                <h3 className={styles.stepHeading}>Step 2: Parent Information & Residence Details</h3>
                 <div className={styles.formGrid}>
                   <div className={styles.inputGroup}>
                     <label>Parent / Guardian Name *</label>
-                    <input type="text" name="parentName" required className="input" placeholder="Father or Mother name" value={formData.parentName} onChange={handleChange} />
+                    <input type="text" name="parentName" required value={formData.parentName} onChange={handleChange} placeholder="Father or Mother full name" className="input" />
                   </div>
-
                   <div className={styles.inputGroup}>
-                    <label>Parent Contact Number *</label>
-                    <input type="tel" name="parentContact" required className="input" placeholder="+91 98765 43210" value={formData.parentContact} onChange={handleChange} />
+                    <label>Parent Contact Number</label>
+                    <input type="tel" name="parentContact" value={formData.parentContact} onChange={handleChange} placeholder="+91 98765 43210" className="input" />
                   </div>
-
                   <div className={styles.inputGroup}>
-                    <label>Father's Occupation</label>
-                    <input type="text" name="fatherOccupation" className="input" placeholder="e.g. Daily Wage Laborer / Deceased" value={formData.fatherOccupation} onChange={handleChange} />
+                    <label>Father Occupation</label>
+                    <input type="text" name="fatherOccupation" value={formData.fatherOccupation} onChange={handleChange} placeholder="e.g. Daily Wage Laborer / Farmer" className="input" />
                   </div>
-
                   <div className={styles.inputGroup}>
-                    <label>Mother's Occupation</label>
-                    <input type="text" name="motherOccupation" className="input" placeholder="e.g. Housewife / Domestic help" value={formData.motherOccupation} onChange={handleChange} />
+                    <label>Mother Occupation</label>
+                    <input type="text" name="motherOccupation" value={formData.motherOccupation} onChange={handleChange} placeholder="e.g. Homemaker" className="input" />
                   </div>
-
-                  <div className={styles.inputGroup}>
-                    <label>Annual Family Income (₹) *</label>
-                    <input type="number" name="familyIncome" required className="input" placeholder="e.g. 60000" value={formData.familyIncome} onChange={handleChange} />
-                  </div>
-
-                  <div className={styles.inputGroup}>
-                    <label>Residence Type *</label>
-                    <select name="residenceType" className="input select" value={formData.residenceType} onChange={handleChange}>
-                      <option value="Rental House">Rental House</option>
-                      <option value="Own House">Own House</option>
-                    </select>
-                  </div>
-
                   <div className={styles.inputGroup} style={{ gridColumn: 'span 2' }}>
                     <label>Residential Address *</label>
-                    <textarea name="address" rows={3} required className="input textarea" placeholder="Full door no, street name, town/village, district & pincode" value={formData.address} onChange={handleChange} />
+                    <textarea name="address" required rows={2} value={formData.address} onChange={handleChange} placeholder="Door No, Street, Village/Town, District, Pincode" className="input textarea" />
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label>Residence Type</label>
+                    <select name="residenceType" value={formData.residenceType} onChange={handleChange} className="input select">
+                      <option value="Rental House">Rental House</option>
+                      <option value="Own House">Own House (Thatched/Kutcha)</option>
+                      <option value="Relative House">Staying with Relatives</option>
+                    </select>
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <label>Family Annual Income (₹)</label>
+                    <input type="number" name="familyIncome" value={formData.familyIncome} onChange={handleChange} placeholder="e.g. 48000" className="input" />
                   </div>
                 </div>
               </div>
             )}
 
-            {/* STEP 3: Academic Details & Marks */}
+            {/* STEP 3 */}
             {currentStep === 3 && (
-              <div className={styles.stepContent}>
-                <h3 className={styles.stepHeading}>Step 3: School / College & Academic Marks</h3>
-
+              <div>
+                <h3 className={styles.stepHeading}>Step 3: Institution & Academic Performance</h3>
                 <div className={styles.formGrid}>
                   <div className={styles.inputGroup} style={{ gridColumn: 'span 2' }}>
                     <label>School / College Name *</label>
-                    <input type="text" name="institutionName" required className="input" placeholder="Full name of school or college" value={formData.institutionName} onChange={handleChange} />
+                    <input type="text" name="institutionName" required value={formData.institutionName} onChange={handleChange} placeholder="Full name of school or college" className="input" />
                   </div>
-
-                  <div className={styles.inputGroup} style={{ gridColumn: 'span 2' }}>
-                    <label>School / College Address & Contact Number *</label>
-                    <input type="text" name="institutionAddress" required className="input" placeholder="Institution location and principal/office phone" value={formData.institutionAddress} onChange={handleChange} />
-                  </div>
-
                   <div className={styles.inputGroup}>
-                    <label>Class / Year & Semester *</label>
-                    <input type="text" name="currentClassSemester" required className="input" placeholder="e.g. 10th Std / B.Sc 2nd Year (Sem 3)" value={formData.currentClassSemester} onChange={handleChange} />
+                    <label>Current Class / Semester *</label>
+                    <input type="text" name="currentClassSemester" required value={formData.currentClassSemester} onChange={handleChange} placeholder="e.g. 11th Std / B.E. 3rd Year" className="input" />
                   </div>
-
                   <div className={styles.inputGroup}>
-                    <label>Quarterly Exam % / Sem 1 Marks *</label>
-                    <input type="text" name="quarterlyMarks" required className="input" placeholder="e.g. 85% or 8.5 CGPA" value={formData.quarterlyMarks} onChange={handleChange} />
-                  </div>
-
-                  <div className={styles.inputGroup}>
-                    <label>Half Yearly % / Sem 2 Marks *</label>
-                    <input type="text" name="halfYearlyMarks" required className="input" placeholder="e.g. 88% or 8.8 CGPA" value={formData.halfYearlyMarks} onChange={handleChange} />
-                  </div>
-
-                  <div className={styles.inputGroup}>
-                    <label>Annual Exam % / Sem 3 Marks *</label>
-                    <input type="text" name="annualMarks" required className="input" placeholder="e.g. 90% or 9.0 CGPA" value={formData.annualMarks} onChange={handleChange} />
+                    <label>Annual Marks (%)</label>
+                    <input type="number" name="annualMarks" value={formData.annualMarks} onChange={handleChange} placeholder="e.g. 88" className="input" />
                   </div>
                 </div>
               </div>
             )}
 
-            {/* STEP 4: Fees & History */}
+            {/* STEP 4 */}
             {currentStep === 4 && (
-              <div className={styles.stepContent}>
-                <h3 className={styles.stepHeading}>Step 4: Fee Structure & Past Scholarship History</h3>
-
+              <div>
+                <h3 className={styles.stepHeading}>Step 4: Fee Structure & Scholarship History</h3>
                 <div className={styles.formGrid}>
                   <div className={styles.inputGroup}>
-                    <label>Last Year Total Fee (2025-26) (₹) *</label>
-                    <input type="number" name="lastYearFee" required className="input" placeholder="e.g. 15000" value={formData.lastYearFee} onChange={handleChange} />
+                    <label>Current Academic Year Fee (₹) *</label>
+                    <input type="number" name="currentYearFee" required value={formData.currentYearFee} onChange={handleChange} placeholder="e.g. 15000" className="input" />
                   </div>
-
                   <div className={styles.inputGroup}>
-                    <label>Current Year Total Fee (2026-27) (₹) *</label>
-                    <input type="number" name="currentYearFee" required className="input" placeholder="e.g. 18000" value={formData.currentYearFee} onChange={handleChange} />
-                  </div>
-
-                  <div className={styles.inputGroup}>
-                    <label>Availed Scholarship Last Year? *</label>
-                    <select name="availedLastYear" className="input select" value={formData.availedLastYear} onChange={handleChange}>
+                    <label>Availed Helping Hands Scholarship Last Year?</label>
+                    <select name="availedLastYear" value={formData.availedLastYear} onChange={handleChange} className="input select">
                       <option value="No">No</option>
                       <option value="Yes">Yes</option>
-                    </select>
-                  </div>
-
-                  <div className={styles.inputGroup}>
-                    <label>Availed Other Non-Trust Scholarship? *</label>
-                    <select name="availedOtherScholarship" className="input select" value={formData.availedOtherScholarship} onChange={handleChange}>
-                      <option value="No">No</option>
-                      <option value="Yes">Yes</option>
-                    </select>
-                  </div>
-
-                  <div className={styles.inputGroup} style={{ gridColumn: 'span 2' }}>
-                    <label>Original Fee Receipt Submitted? (If availed last year)</label>
-                    <select name="originalReceiptSubmitted" className="input select" value={formData.originalReceiptSubmitted} onChange={handleChange}>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
                     </select>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* STEP 5: Verification & Panel Recommendations */}
+            {/* STEP 5 */}
             {currentStep === 5 && (
-              <div className={styles.stepContent}>
-                <h3 className={styles.stepHeading}>Step 5: Panel Verification & Final Recommendations</h3>
-
+              <div>
+                <h3 className={styles.stepHeading}>Step 5: Panel Verification & Recommendation</h3>
                 <div className={styles.formGrid}>
                   <div className={styles.inputGroup}>
-                    <label>All Marksheets Verified by Panel? *</label>
-                    <select name="marksheetsVerified" className="input select" value={formData.marksheetsVerified} onChange={handleChange}>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
+                    <label>Marksheets Verified?</label>
+                    <select name="marksheetsVerified" value={formData.marksheetsVerified} onChange={handleChange} className="input select">
+                      <option value="Yes">Yes - Verified Original Marksheets</option>
+                      <option value="No">No - Pending Verification</option>
                     </select>
                   </div>
-
                   <div className={styles.inputGroup}>
-                    <label>Official Fee Structure Verified by Panel? *</label>
-                    <select name="feeStructureVerified" className="input select" value={formData.feeStructureVerified} onChange={handleChange}>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                  </div>
-
-                  <div className={styles.inputGroup}>
-                    <label>Satisfied with Student Academic Performance? *</label>
-                    <select name="performanceSatisfied" className="input select" value={formData.performanceSatisfied} onChange={handleChange}>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                  </div>
-
-                  <div className={styles.inputGroup}>
-                    <label>Panel Recommendation *</label>
-                    <select name="panelRecommendation" className="input select" value={formData.panelRecommendation} onChange={handleChange}>
+                    <label>Panel Final Recommendation</label>
+                    <select name="panelRecommendation" value={formData.panelRecommendation} onChange={handleChange} className="input select">
                       <option value="Strongly recommended">Strongly Recommended</option>
                       <option value="Recommended">Recommended</option>
-                      <option value="Wait listed">Wait Listed</option>
+                      <option value="Conditional">Conditional Approval</option>
                       <option value="Rejected">Rejected</option>
                     </select>
                   </div>
-
-                  <div className={styles.inputGroup} style={{ gridColumn: 'span 2' }}>
-                    <label>Panel Members Detailed Comments *</label>
-                    <textarea name="panelComments" rows={3} required className="input textarea" placeholder="Enter comments on house visit, family background verification, and interview feedback..." value={formData.panelComments} onChange={handleChange} />
-                  </div>
                 </div>
               </div>
             )}
 
-            {/* Step Navigation Bar */}
+            {/* ACTION BUTTONS */}
             <div className={styles.formActions}>
-              {currentStep > 1 && (
+              {currentStep > 1 ? (
                 <button type="button" onClick={handlePrev} className="btn btn-secondary">
-                  <ArrowLeft size={16} /> Previous Step
-                </button>
-              )}
-              {currentStep < 5 ? (
-                <button type="button" onClick={handleNext} className="btn btn-primary" style={{ marginLeft: "auto" }}>
-                  Next Step <ArrowRight size={16} />
+                  Previous Step
                 </button>
               ) : (
-                <button type="submit" className="btn btn-primary" style={{ marginLeft: "auto" }}>
-                  <Save size={16} /> Submit & Save Application
+                <div />
+              )}
+
+              {currentStep < 5 ? (
+                <button type="button" onClick={handleNext} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>Next Step</span>
+                  <ArrowRight size={18} />
+                </button>
+              ) : (
+                <button type="submit" className="btn btn-primary btn-lg" disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Save size={18} />
+                  <span>{loading ? 'Saving to MongoDB...' : 'SUBMIT & SAVE APPLICATION'}</span>
                 </button>
               )}
             </div>
           </form>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

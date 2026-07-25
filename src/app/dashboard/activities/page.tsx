@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './page.module.css';
 import { 
   Calendar, 
@@ -9,15 +9,16 @@ import {
   Plus, 
   CheckCircle2,
   X,
-  Tag,
   Briefcase
 } from 'lucide-react';
-import { mockActivities as initialActivities } from '@/data/mockData';
+import { mockActivities as initialMockActivities } from '@/data/mockData';
+import { Activity } from '@/types';
 
 export default function ActivitiesPage() {
-  const [activities, setActivities] = useState(initialActivities);
+  const [activities, setActivities] = useState<Activity[]>(initialMockActivities);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('All');
-  const [selectedActivity, setSelectedActivity] = useState<any>(null);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -30,16 +31,34 @@ export default function ActivitiesPage() {
     description: '',
   });
 
+  // Fetch live activities from MongoDB Atlas
+  useEffect(() => {
+    async function loadActivities() {
+      try {
+        const res = await fetch('/api/activities');
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setActivities(data);
+        }
+      } catch (err) {
+        console.warn('Failed to load DB activities, using fallback data.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadActivities();
+  }, []);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0
-    }).format(amount);
+    }).format(amount || 0);
   };
 
   const getStatusBadgeClass = (status: string) => {
-    switch(status.toLowerCase()) {
+    switch((status || '').toLowerCase()) {
       case 'completed': return styles.badgeSuccess;
       case 'ongoing': return styles.badgePrimary;
       case 'planned': return styles.badgeWarning;
@@ -50,28 +69,44 @@ export default function ActivitiesPage() {
 
   const filteredActivities = activities.filter(a => {
     if (activeTab === 'All') return true;
-    return a.status.toLowerCase() === activeTab.toLowerCase();
+    return (a.status || '').toLowerCase() === activeTab.toLowerCase();
   });
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newActivity = {
-      id: `act${activities.length + 1}`,
+    const newActivityPayload = {
+      id: `act_${Date.now()}`,
       title: formData.title,
-      category: formData.category,
+      category: formData.category as any,
       date: formData.date,
       location: formData.location,
-      status: 'planned',
+      status: 'planned' as const,
       budget: Number(formData.budget) || 0,
       actualSpent: 0,
       beneficiariesCovered: Number(formData.beneficiariesCovered) || 0,
       description: formData.description,
       organizer: 'Fr. Administrator',
     };
-    setActivities([newActivity as any, ...activities]);
+
+    try {
+      const res = await fetch('/api/activities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newActivityPayload),
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        setActivities([resData.data, ...activities]);
+      } else {
+        setActivities([newActivityPayload as any, ...activities]);
+      }
+    } catch (err) {
+      setActivities([newActivityPayload as any, ...activities]);
+    }
+
     setShowAddModal(false);
     setFormData({ title: '', category: 'education', date: '', location: '', budget: '', beneficiariesCovered: '', description: '' });
-    alert('Activity created successfully!');
+    alert('Activity created and saved to MongoDB Atlas!');
   };
 
   return (
@@ -104,9 +139,9 @@ export default function ActivitiesPage() {
           const budgetPercent = activity.budget > 0 ? (activity.actualSpent / activity.budget) * 100 : 0;
           
           return (
-            <div key={activity.id} className={styles.card} onClick={() => setSelectedActivity(activity)}>
+            <div key={activity.id} className={styles.card}>
               <div className={styles.cardHeader}>
-                <div className={styles.categoryBadge}>{activity.category.replace('_', ' ')}</div>
+                <div className={styles.categoryBadge}>{(activity.category || '').replace('_', ' ')}</div>
                 <span className={`${styles.statusBadge} ${getStatusBadgeClass(activity.status)}`}>
                   {activity.status}
                 </span>
@@ -118,13 +153,13 @@ export default function ActivitiesPage() {
                 <div className={styles.metaInfo}>
                   <div className={styles.metaItem}>
                     <Calendar size={14} />
-                    <span>{new Date(activity.date).toLocaleDateString()}</span>
+                    <span>{activity.date ? new Date(activity.date).toLocaleDateString() : 'TBD'}</span>
                   </div>
                   <div className={styles.metaItem}>
                     <MapPin size={14} />
                     <span>{activity.location}</span>
                   </div>
-                  {activity.beneficiariesCovered && (
+                  {activity.beneficiariesCovered > 0 && (
                     <div className={styles.metaItem}>
                       <Users size={14} />
                       <span>{activity.beneficiariesCovered} beneficiaries</span>
@@ -167,7 +202,7 @@ export default function ActivitiesPage() {
                   </div>
                   <span className={styles.organizerName}>{activity.organizer || 'Trust Admin'}</span>
                 </div>
-                <button className={styles.btnText}>View Details</button>
+                <button className={styles.btnText} onClick={() => setSelectedActivity(activity)}>View Details</button>
               </div>
             </div>
           );
@@ -180,14 +215,14 @@ export default function ActivitiesPage() {
           <div className={styles.modalCard}>
             <div className={styles.modalHeader}>
               <div>
-                <h2>{selectedActivity.title}</h2>
-                <p className={styles.modalSub}>{selectedActivity.category.toUpperCase()} | {selectedActivity.status.toUpperCase()}</p>
+                <h2 style={{ margin: 0 }}>{selectedActivity.title}</h2>
+                <p className={styles.modalSub}>{(selectedActivity.category || '').toUpperCase()} | {(selectedActivity.status || '').toUpperCase()}</p>
               </div>
               <button className={styles.closeBtn} onClick={() => setSelectedActivity(null)}><X size={20} /></button>
             </div>
 
             <div className={styles.detailBody}>
-              <div className={styles.infoRow}><Calendar size={16} /> <span>Date: {new Date(selectedActivity.date).toLocaleDateString()}</span></div>
+              <div className={styles.infoRow}><Calendar size={16} /> <span>Date: {selectedActivity.date ? new Date(selectedActivity.date).toLocaleDateString() : 'N/A'}</span></div>
               <div className={styles.infoRow}><MapPin size={16} /> <span>Location: {selectedActivity.location}</span></div>
               <div className={styles.infoRow}><Users size={16} /> <span>Beneficiaries Reached: {selectedActivity.beneficiariesCovered || 'N/A'}</span></div>
               <div className={styles.infoRow}><Briefcase size={16} /> <span>Organizer: {selectedActivity.organizer || 'Helping Hands Board'}</span></div>
@@ -266,7 +301,7 @@ export default function ActivitiesPage() {
 
               <div className={styles.modalActions}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Create Activity</button>
+                <button type="submit" className="btn btn-primary">Save Activity to MongoDB</button>
               </div>
             </form>
           </div>

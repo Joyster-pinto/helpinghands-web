@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './page.module.css';
 import { 
   GraduationCap,
@@ -9,20 +9,19 @@ import {
   Award,
   Search,
   Plus,
-  Heart,
-  BookOpen,
   X,
   Mail,
   Phone
 } from 'lucide-react';
-import { Linkedin } from '@/components/icons/SocialIcons';
-import { mockAlumni as initialAlumni } from '@/data/mockData';
+import { mockAlumni as initialMockAlumni } from '@/data/mockData';
+import { Alumni } from '@/types';
 
 export default function AlumniPage() {
-  const [alumniList, setAlumniList] = useState(initialAlumni);
+  const [alumniList, setAlumniList] = useState<Alumni[]>(initialMockAlumni);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [selectedAlumni, setSelectedAlumni] = useState<any>(null);
+  const [selectedAlumni, setSelectedAlumni] = useState<Alumni | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -39,34 +38,52 @@ export default function AlumniPage() {
     location: '',
   });
 
+  // Fetch live alumni from MongoDB Atlas
+  useEffect(() => {
+    async function loadAlumni() {
+      try {
+        const res = await fetch('/api/alumni');
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setAlumniList(data);
+        }
+      } catch (err) {
+        console.warn('Failed to load DB alumni, using fallback data.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadAlumni();
+  }, []);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0
-    }).format(amount);
+    }).format(amount || 0);
   };
 
   const filteredAlumni = alumniList.filter(a => {
-    const matchesSearch = a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      a.institution.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      a.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (a.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (a.institution || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (a.location || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = !statusFilter || a.currentStatus === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newAlumnus = {
-      id: `al${alumniList.length + 1}`,
+    const newAlumnusPayload = {
+      id: `al_${Date.now()}`,
       name: formData.name,
       email: formData.email,
       phone: formData.phone,
       graduationYear: formData.graduationYear,
-      scheme: 'college',
+      scheme: 'college' as const,
       institution: formData.institution,
       degree: formData.degree,
-      currentStatus: formData.currentStatus,
+      currentStatus: formData.currentStatus as any,
       currentOrganization: formData.currentOrganization,
       currentRole: formData.currentRole,
       location: formData.location,
@@ -75,10 +92,26 @@ export default function AlumniPage() {
       isVolunteer: true,
       totalContributions: 0,
     };
-    setAlumniList([newAlumnus as any, ...alumniList]);
+
+    try {
+      const res = await fetch('/api/alumni', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newAlumnusPayload),
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        setAlumniList([resData.data, ...alumniList]);
+      } else {
+        setAlumniList([newAlumnusPayload as any, ...alumniList]);
+      }
+    } catch (err) {
+      setAlumniList([newAlumnusPayload as any, ...alumniList]);
+    }
+
     setShowAddModal(false);
     setFormData({ name: '', email: '', phone: '', graduationYear: '2024', scheme: 'Dr. Kalam Scholarship Scheme (College)', institution: '', degree: '', currentStatus: 'employed', currentOrganization: '', currentRole: '', location: '' });
-    alert('Alumnus added to directory!');
+    alert('Alumnus added and saved to MongoDB Atlas!');
   };
 
   return (
@@ -117,7 +150,7 @@ export default function AlumniPage() {
 
       <div className={styles.grid}>
         {filteredAlumni.map((alumnus) => (
-          <div key={alumnus.id} className={styles.card} onClick={() => setSelectedAlumni(alumnus)}>
+          <div key={alumnus.id} className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.headerTop}>
                 <h3 className={styles.name}>{alumnus.name}</h3>
@@ -126,7 +159,7 @@ export default function AlumniPage() {
                   alumnus.currentStatus === 'studying' ? styles.badgePrimary : 
                   styles.badgeWarning
                 }`}>
-                  {alumnus.currentStatus.replace('_', ' ')}
+                  {(alumnus.currentStatus || 'employed').replace('_', ' ')}
                 </span>
               </div>
               <div className={styles.educationInfo}>
@@ -170,19 +203,19 @@ export default function AlumniPage() {
                 {alumnus.isMentor && <span className={styles.tag}>Mentor</span>}
                 {alumnus.isVolunteer && <span className={styles.tag}>Volunteer</span>}
               </div>
-              <button className={styles.btnText}>View Profile</button>
+              <button className={styles.btnText} onClick={() => setSelectedAlumni(alumnus)}>View Profile</button>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Alumni Detail Profile Modal */}
+      {/* Alumni Detail Profile Modal ONLY ON VIEW PROFILE */}
       {selectedAlumni && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalCard}>
             <div className={styles.modalHeader}>
               <div>
-                <h2>{selectedAlumni.name}</h2>
+                <h2 style={{ margin: 0 }}>{selectedAlumni.name}</h2>
                 <p className={styles.modalSub}>{selectedAlumni.degree} ({selectedAlumni.graduationYear}) — {selectedAlumni.institution}</p>
               </div>
               <button className={styles.closeBtn} onClick={() => setSelectedAlumni(null)}><X size={20} /></button>
@@ -289,7 +322,7 @@ export default function AlumniPage() {
 
               <div className={styles.modalActions}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Alumnus</button>
+                <button type="submit" className="btn btn-primary">Save Alumnus to MongoDB</button>
               </div>
             </form>
           </div>

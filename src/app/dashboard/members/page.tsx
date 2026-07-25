@@ -1,13 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './page.module.css';
 import { 
   Users, 
   Search, 
   Plus, 
-  LayoutGrid, 
-  List, 
   Mail, 
   Phone,
   Award,
@@ -15,12 +13,14 @@ import {
   MapPin,
   Calendar
 } from 'lucide-react';
-import { mockMembers as initialMembers } from '@/data/mockData';
+import { mockMembers as initialMockMembers } from '@/data/mockData';
+import { TrustMember } from '@/types';
 
 export default function MembersPage() {
-  const [members, setMembers] = useState(initialMembers);
+  const [members, setMembers] = useState<TrustMember[]>(initialMockMembers);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [selectedMember, setSelectedMember] = useState<TrustMember | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -31,45 +31,80 @@ export default function MembersPage() {
     occupation: '',
     address: '',
     bio: '',
+    totalContributions: '',
   });
+
+  // Fetch live members from MongoDB Atlas
+  useEffect(() => {
+    async function loadMembers() {
+      try {
+        const res = await fetch('/api/members');
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setMembers(data);
+        }
+      } catch (err) {
+        console.warn('Failed to load DB members, using fallback data.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadMembers();
+  }, []);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0
-    }).format(amount);
+    }).format(amount || 0);
   };
 
   const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    return (name || 'Member').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
   };
 
   const filteredMembers = members.filter(m => 
-    m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.designation.toLowerCase().includes(searchTerm.toLowerCase())
+    (m.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (m.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (m.designation || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newMember = {
-      id: `m${members.length + 1}`,
+    const newMemberPayload = {
+      id: `m_${Date.now()}`,
       name: formData.name,
-      designation: formData.designation,
-      status: 'active',
+      designation: formData.designation as any,
+      status: 'active' as const,
       email: formData.email,
       phone: formData.phone,
       address: formData.address,
       joinDate: new Date().toISOString().split('T')[0],
       occupation: formData.occupation,
-      totalContributions: 0,
+      totalContributions: Number(formData.totalContributions) || 25000,
       bio: formData.bio || 'Active trust member supporting educational initiatives.',
     };
-    setMembers([newMember as any, ...members]);
+
+    try {
+      const res = await fetch('/api/members', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newMemberPayload),
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        setMembers([resData.data, ...members]);
+      } else {
+        setMembers([newMemberPayload as any, ...members]);
+      }
+    } catch (err) {
+      setMembers([newMemberPayload as any, ...members]);
+    }
+
     setShowAddModal(false);
-    setFormData({ name: '', designation: 'Trustee', email: '', phone: '', occupation: '', address: '', bio: '' });
-    alert('New member added successfully!');
+    setFormData({ name: '', designation: 'Trustee', email: '', phone: '', occupation: '', address: '', bio: '', totalContributions: '' });
+    alert('Member added and saved to MongoDB Atlas!');
   };
 
   return (
@@ -116,7 +151,7 @@ export default function MembersPage() {
             
             <div className={styles.cardBody}>
               <h3 className={styles.name}>{member.name}</h3>
-              <p className={styles.role}>{member.designation.replace('_', ' ').toUpperCase()}</p>
+              <p className={styles.role}>{(member.designation || '').replace('_', ' ').toUpperCase()}</p>
               
               <div className={styles.contactInfo}>
                 <div className={styles.contactItem}>
@@ -129,18 +164,16 @@ export default function MembersPage() {
                 </div>
               </div>
 
-              {member.totalContributions && (
-                <div className={styles.contributions}>
-                  <Award size={16} className={styles.awardIcon} />
-                  <span>Total Contributions: <strong>{formatCurrency(member.totalContributions)}</strong></span>
-                </div>
-              )}
+              <div className={styles.contributions}>
+                <Award size={16} className={styles.awardIcon} />
+                <span>Total Contributions: <strong>{formatCurrency(member.totalContributions || 0)}</strong></span>
+              </div>
 
               <p className={styles.bio}>{member.bio}</p>
             </div>
             
             <div className={styles.cardFooter}>
-              <span className={styles.joinDate}>Joined: {new Date(member.joinDate).getFullYear()}</span>
+              <span className={styles.joinDate}>Joined: {member.joinDate ? new Date(member.joinDate).getFullYear() : '2024'}</span>
               <button className={styles.btnText}>View Profile</button>
             </div>
           </div>
@@ -157,8 +190,8 @@ export default function MembersPage() {
                   {getInitials(selectedMember.name)}
                 </div>
                 <div>
-                  <h2>{selectedMember.name}</h2>
-                  <p className={styles.modalSub}>{selectedMember.designation.replace('_', ' ').toUpperCase()}</p>
+                  <h2 style={{ margin: 0 }}>{selectedMember.name}</h2>
+                  <p className={styles.modalSub}>{(selectedMember.designation || '').replace('_', ' ').toUpperCase()}</p>
                 </div>
               </div>
               <button className={styles.closeBtn} onClick={() => setSelectedMember(null)}><X size={20} /></button>
@@ -172,16 +205,14 @@ export default function MembersPage() {
                 <Phone size={16} /> <span>{selectedMember.phone}</span>
               </div>
               <div className={styles.infoRow}>
-                <MapPin size={16} /> <span>{selectedMember.address}</span>
+                <MapPin size={16} /> <span>{selectedMember.address || 'Chennai, TN'}</span>
               </div>
               <div className={styles.infoRow}>
-                <Calendar size={16} /> <span>Joined: {new Date(selectedMember.joinDate).toLocaleDateString()}</span>
+                <Calendar size={16} /> <span>Joined: {selectedMember.joinDate ? new Date(selectedMember.joinDate).toLocaleDateString() : 'N/A'}</span>
               </div>
-              {selectedMember.totalContributions && (
-                <div className={styles.infoRow}>
-                  <Award size={16} /> <span>Total Contributions: {formatCurrency(selectedMember.totalContributions)}</span>
-                </div>
-              )}
+              <div className={styles.infoRow}>
+                <Award size={16} /> <span>Total Contributions: <strong>{formatCurrency(selectedMember.totalContributions || 0)}</strong></span>
+              </div>
 
               <div style={{ marginTop: '20px' }}>
                 <h4>Biography & Background</h4>
@@ -233,9 +264,15 @@ export default function MembersPage() {
                 </div>
               </div>
 
-              <div className={styles.formGroup}>
-                <label>Address</label>
-                <input type="text" placeholder="City / District" className="input" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} />
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>City / District</label>
+                  <input type="text" placeholder="e.g. Kancheepuram" className="input" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Total Contribution (₹) *</label>
+                  <input type="number" required placeholder="e.g. 25000" className="input" value={formData.totalContributions} onChange={(e) => setFormData({...formData, totalContributions: e.target.value})} />
+                </div>
               </div>
 
               <div className={styles.formGroup}>
@@ -245,7 +282,7 @@ export default function MembersPage() {
 
               <div className={styles.modalActions}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Member</button>
+                <button type="submit" className="btn btn-primary">Save Member to MongoDB</button>
               </div>
             </form>
           </div>

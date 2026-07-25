@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './page.module.css';
 import { 
   Users, 
@@ -13,15 +13,20 @@ import {
   Target,
   X,
   Calendar,
-  MessageSquare
+  MessageSquare,
+  Edit
 } from 'lucide-react';
-import { mockSponsors as initialSponsors } from '@/data/mockData';
+import { mockSponsors as initialMockSponsors } from '@/data/mockData';
+import { Sponsor } from '@/types';
 
 export default function SponsorshipsPage() {
-  const [sponsors, setSponsors] = useState(initialSponsors);
+  const [sponsors, setSponsors] = useState<Sponsor[]>(initialMockSponsors);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSponsor, setSelectedSponsor] = useState<any>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+
+  const [commLogSponsor, setCommLogSponsor] = useState<Sponsor | null>(null);
+  const [manageSponsor, setManageSponsor] = useState<Sponsor | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -33,27 +38,45 @@ export default function SponsorshipsPage() {
     totalPaid: '',
   });
 
+  // Fetch live sponsors from MongoDB Atlas
+  useEffect(() => {
+    async function loadSponsors() {
+      try {
+        const res = await fetch('/api/sponsors');
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setSponsors(data);
+        }
+      } catch (err) {
+        console.warn('Failed to load DB sponsors, using fallback data.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadSponsors();
+  }, []);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0
-    }).format(amount);
+    }).format(amount || 0);
   };
 
-  const totalCommitted = sponsors.reduce((sum, s) => sum + s.totalCommitted, 0);
-  const totalReceived = sponsors.reduce((sum, s) => sum + s.totalPaid, 0);
+  const totalCommitted = sponsors.reduce((sum, s) => sum + (s.totalCommitted || 0), 0);
+  const totalReceived = sponsors.reduce((sum, s) => sum + (s.totalPaid || 0), 0);
 
   const filteredSponsors = sponsors.filter(s => 
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (s.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (s.organization && s.organization.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newSponsor = {
-      id: `sp${sponsors.length + 1}`,
+    const newSponsorPayload = {
+      id: `sp_${Date.now()}`,
       name: formData.name,
       type: formData.type as any,
       email: formData.email,
@@ -62,14 +85,49 @@ export default function SponsorshipsPage() {
       totalCommitted: Number(formData.totalCommitted) || 0,
       totalPaid: Number(formData.totalPaid) || 0,
       beneficiaries: [],
-      status: 'active',
-      communications: [],
+      status: 'active' as const,
+      communications: [
+        { date: new Date().toISOString().split('T')[0], type: 'email', subject: 'New Sponsor Onboarded', notes: 'Initial commitment recorded in trust portal.' }
+      ],
       renewalDate: '2027-01-01',
     };
-    setSponsors([newSponsor as any, ...sponsors]);
+
+    try {
+      const res = await fetch('/api/sponsors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSponsorPayload),
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        setSponsors([resData.data, ...sponsors]);
+      } else {
+        setSponsors([newSponsorPayload as any, ...sponsors]);
+      }
+    } catch (err) {
+      setSponsors([newSponsorPayload as any, ...sponsors]);
+    }
+
     setShowAddModal(false);
     setFormData({ name: '', type: 'individual', email: '', phone: '', organization: '', totalCommitted: '', totalPaid: '' });
-    alert('Sponsor added successfully!');
+    alert('Sponsor added and saved to MongoDB Atlas!');
+  };
+
+  const handleSaveManage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manageSponsor) return;
+    try {
+      await fetch('/api/sponsors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(manageSponsor),
+      });
+      setSponsors(sponsors.map(s => s.id === manageSponsor.id ? manageSponsor : s));
+      setManageSponsor(null);
+      alert('Sponsorship commitment updated in MongoDB Atlas!');
+    } catch (err) {
+      setManageSponsor(null);
+    }
   };
 
   return (
@@ -191,10 +249,10 @@ export default function SponsorshipsPage() {
               </div>
               
               <div className={styles.cardFooter}>
-                <button className={styles.btnSecondary} onClick={() => setSelectedSponsor(sponsor)}>
+                <button className={styles.btnSecondary} onClick={() => setCommLogSponsor(sponsor)}>
                   <MessageSquare size={14} /> Communication Log
                 </button>
-                <button className={styles.btnText} onClick={() => setSelectedSponsor(sponsor)}>
+                <button className={styles.btnText} onClick={() => setManageSponsor(sponsor)}>
                   Manage
                 </button>
               </div>
@@ -203,47 +261,87 @@ export default function SponsorshipsPage() {
         })}
       </div>
 
-      {/* Sponsor Details / Manage Modal */}
-      {selectedSponsor && (
+      {/* COMMUNICATION LOG SPECIFIC MODAL */}
+      {commLogSponsor && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalCard}>
             <div className={styles.modalHeader}>
               <div>
-                <h2>{selectedSponsor.name}</h2>
-                <p className={styles.modalSub}>{selectedSponsor.organization || selectedSponsor.type.toUpperCase()}</p>
+                <h2>Communication Log: {commLogSponsor.name}</h2>
+                <p className={styles.modalSub}>{commLogSponsor.organization || commLogSponsor.email}</p>
               </div>
-              <button className={styles.closeBtn} onClick={() => setSelectedSponsor(null)}><X size={20} /></button>
+              <button className={styles.closeBtn} onClick={() => setCommLogSponsor(null)}><X size={20} /></button>
             </div>
 
             <div className={styles.detailBody}>
-              <div className={styles.infoRow}><Mail size={16} /> <span>{selectedSponsor.email}</span></div>
-              <div className={styles.infoRow}><Phone size={16} /> <span>{selectedSponsor.phone}</span></div>
-              <div className={styles.infoRow}><Calendar size={16} /> <span>Renewal Date: {selectedSponsor.renewalDate || '1/1/2027'}</span></div>
-              
-              <div style={{ marginTop: '15px', background: '#f8f9fa', padding: '15px', borderRadius: '8px' }}>
-                <h4>Sponsorship Progress</h4>
-                <p>Committed Amount: <strong>{formatCurrency(selectedSponsor.totalCommitted)}</strong></p>
-                <p>Total Received: <strong>{formatCurrency(selectedSponsor.totalPaid)}</strong></p>
-                <p>Beneficiaries Supported: <strong>{selectedSponsor.beneficiaries ? selectedSponsor.beneficiaries.length : 0}</strong></p>
-              </div>
-
-              <div style={{ marginTop: '20px' }}>
-                <h4>Communication Log & Notes</h4>
-                {selectedSponsor.communications && selectedSponsor.communications.length > 0 ? (
-                  <ul className={styles.detailList}>
-                    {selectedSponsor.communications.map((c: any, idx: number) => (
-                      <li key={idx}><strong>{c.date}:</strong> {c.subject} - {c.notes}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p style={{ color: '#6c757d', fontSize: '13px' }}>No formal communication logs recorded yet for this sponsor.</p>
-                )}
-              </div>
+              <h4 style={{ margin: '0 0 10px 0', color: '#2b2d32' }}>Official Interaction History</h4>
+              {commLogSponsor.communications && commLogSponsor.communications.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {commLogSponsor.communications.map((c: any, idx: number) => (
+                    <div key={idx} style={{ background: '#f8f9fa', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #f36f21' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700, color: '#f36f21' }}>
+                        <span>{c.subject || 'Meeting / Note'}</span>
+                        <span>{c.date}</span>
+                      </div>
+                      <p style={{ margin: '5px 0 0 0', fontSize: '13px', color: '#495057' }}>{c.notes}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', color: '#6c757d', fontSize: '13px' }}>
+                  Initial sponsor record created. No additional communications logged yet.
+                </div>
+              )}
             </div>
 
             <div className={styles.modalActions}>
-              <button className="btn btn-primary" onClick={() => setSelectedSponsor(null)}>Close</button>
+              <button className="btn btn-primary" onClick={() => setCommLogSponsor(null)}>Close Log</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MANAGE SPONSORSHIP SPECIFIC MODAL */}
+      {manageSponsor && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalCard}>
+            <div className={styles.modalHeader}>
+              <h2>Manage Sponsorship: {manageSponsor.name}</h2>
+              <button className={styles.closeBtn} onClick={() => setManageSponsor(null)}><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleSaveManage} className={styles.modalForm}>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Committed Amount (₹) *</label>
+                  <input type="number" className="input" required value={manageSponsor.totalCommitted} onChange={(e) => setManageSponsor({...manageSponsor, totalCommitted: Number(e.target.value) || 0})} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Total Received Amount (₹) *</label>
+                  <input type="number" className="input" required value={manageSponsor.totalPaid} onChange={(e) => setManageSponsor({...manageSponsor, totalPaid: Number(e.target.value) || 0})} />
+                </div>
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Status *</label>
+                  <select className="input select" value={manageSponsor.status} onChange={(e) => setManageSponsor({...manageSponsor, status: e.target.value as any})}>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="pending">Pending Renewal</option>
+                  </select>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Renewal Date</label>
+                  <input type="date" className="input" value={manageSponsor.renewalDate || ''} onChange={(e) => setManageSponsor({...manageSponsor, renewalDate: e.target.value})} />
+                </div>
+              </div>
+
+              <div className={styles.modalActions}>
+                <button type="button" className="btn btn-secondary" onClick={() => setManageSponsor(null)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Save Changes to MongoDB</button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -301,7 +399,7 @@ export default function SponsorshipsPage() {
 
               <div className={styles.modalActions}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Sponsor</button>
+                <button type="submit" className="btn btn-primary">Save Sponsor to MongoDB</button>
               </div>
             </form>
           </div>

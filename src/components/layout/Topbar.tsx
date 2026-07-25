@@ -34,11 +34,6 @@ export default function Topbar({ user }: { user: any }) {
         <h2>Dashboard Overview</h2>
       </div>
       <div className={styles.actions} style={{ position: 'relative' }} ref={dropdownRef}>
-        <Link href="/dashboard/beneficiaries/new" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', fontSize: '13px', textDecoration: 'none' }}>
-          <Plus size={16} />
-          <span>Add Beneficiary</span>
-        </Link>
-
         <button className={styles.iconButton} onClick={() => setShowNotifications(!showNotifications)} title="Notifications">
           <Bell size={20} />
           <span style={{ position: 'absolute', top: '2px', right: '2px', width: '8px', height: '8px', borderRadius: '50%', background: '#f36f21' }}></span>
