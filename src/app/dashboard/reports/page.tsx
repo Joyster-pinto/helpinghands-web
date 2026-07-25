@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import styles from './page.module.css';
 import { 
   BarChart, 
-  Download, 
   Users, 
   Wallet, 
   Calendar, 
@@ -12,8 +11,9 @@ import {
   GraduationCap,
   Briefcase,
   Printer,
-  FileSpreadsheet,
-  FileCode
+  FileCode,
+  Filter,
+  X
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -43,9 +43,28 @@ const COLORS = ['#f89d35', '#22c55e', '#3b82f6', '#eab308', '#ef4444', '#8b5cf6'
 export default function ReportsPage() {
   const [selectedType, setSelectedType] = useState('financial');
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
+  const [appliedFilter, setAppliedFilter] = useState({ from: '', to: '' });
+
+  const handleGenerateReport = () => {
+    setAppliedFilter({ from: dateRange.from, to: dateRange.to });
+  };
+
+  const handleResetFilter = () => {
+    setDateRange({ from: '', to: '' });
+    setAppliedFilter({ from: '', to: '' });
+  };
+
+  // Filter transactions by date if appliedFilter is set
+  const filteredTransactions = mockTransactions.filter(t => {
+    if (!appliedFilter.from && !appliedFilter.to) return true;
+    const txDate = new Date(t.date).getTime();
+    const fromDate = appliedFilter.from ? new Date(appliedFilter.from).getTime() : 0;
+    const toDate = appliedFilter.to ? new Date(appliedFilter.to).getTime() : Infinity;
+    return txDate >= fromDate && txDate <= toDate;
+  });
 
   // Financial Data Processing
-  const financialData = mockTransactions.reduce((acc: any, curr) => {
+  const financialData = filteredTransactions.reduce((acc: any, curr) => {
     const month = new Date(curr.date).toLocaleString('default', { month: 'short' });
     const existing = acc.find((item: any) => item.name === month);
     if (existing) {
@@ -96,7 +115,7 @@ export default function ReportsPage() {
     let csv = '';
     if (selectedType === 'financial') {
       csv = 'Date,Description,Type,Category,Amount (INR),Payment Mode\n';
-      mockTransactions.forEach(t => {
+      filteredTransactions.forEach(t => {
         csv += `"${t.date}","${t.description}","${t.type}","${t.category}",${t.amount},"${t.paymentMode}"\n`;
       });
     } else if (selectedType === 'beneficiary') {
@@ -126,11 +145,6 @@ export default function ReportsPage() {
       });
     }
     downloadFile(csv, `HelpingHands_${selectedType}_Report.csv`, 'text/csv;charset=utf-8;');
-  };
-
-  const handleExportExcel = () => {
-    // Standard Excel-compatible TSV/CSV format
-    handleExportCSV();
   };
 
   const handleExportPDF = () => {
@@ -182,11 +196,20 @@ export default function ReportsPage() {
               onChange={(e) => setDateRange({...dateRange, to: e.target.value})}
             />
           </div>
-          <button className={styles.btnPrimary} onClick={() => alert(`Report updated for ${selectedType.toUpperCase()} module (${dateRange.from || 'All dates'} to ${dateRange.to || 'Today'})`)}>
-            Generate Report
+          <button className={styles.btnPrimary} onClick={handleGenerateReport}>
+            <Filter size={16} /> Generate Report
           </button>
         </div>
       </div>
+
+      {(appliedFilter.from || appliedFilter.to) && (
+        <div style={{ background: '#e8f0fe', border: '1px solid #aecbfa', padding: '10px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', color: '#1a73e8' }}>
+          <span>Showing report data filtered from <strong>{appliedFilter.from || 'Beginning'}</strong> to <strong>{appliedFilter.to || 'Present'}</strong></span>
+          <button onClick={handleResetFilter} style={{ background: 'none', border: 'none', color: '#1a73e8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+            <X size={14} /> Clear Filter
+          </button>
+        </div>
+      )}
 
       <div className={styles.reportContent}>
         <div className={styles.contentHeader}>
@@ -275,7 +298,7 @@ export default function ReportsPage() {
           <div className={styles.placeholderState}>
             <BarChart size={48} className={styles.placeholderIcon} />
             <h3>Summary Report for {reportTypes.find(t => t.id === selectedType)?.title}</h3>
-            <p>Click PDF, Excel, or CSV above to download the full detailed dataset for this section.</p>
+            <p>Click PDF Print or Download CSV above to export the complete detailed dataset for this section.</p>
           </div>
         )}
       </div>

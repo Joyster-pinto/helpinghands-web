@@ -22,22 +22,24 @@ const data = [
 
 export default function Chart() {
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <BarChart
-        data={data}
-        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" vertical={false} />
-        <XAxis dataKey="name" stroke="#a0a0a0" tick={{ fill: '#a0a0a0' }} axisLine={false} tickLine={false} />
-        <YAxis stroke="#a0a0a0" tick={{ fill: '#a0a0a0' }} axisLine={false} tickLine={false} tickFormatter={(val) => `₹${val/1000}k`} />
-        <Tooltip
-          contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '8px' }}
-          itemStyle={{ color: '#fff' }}
-        />
-        <Legend wrapperStyle={{ paddingTop: '20px' }} />
-        <Bar dataKey="income" name="Income" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={32} />
-        <Bar dataKey="expense" name="Expense" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={32} />
-      </BarChart>
-    </ResponsiveContainer>
+    <div style={{ width: '100%', height: '320px' }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={data}
+          margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#e9ecef" vertical={false} />
+          <XAxis dataKey="name" stroke="#6c757d" tick={{ fill: '#495057', fontSize: 12 }} axisLine={{ stroke: '#e9ecef' }} tickLine={false} />
+          <YAxis stroke="#6c757d" tick={{ fill: '#495057', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(val) => `₹${val/1000}k`} />
+          <Tooltip
+            contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #ced4da', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+            itemStyle={{ fontSize: '13px' }}
+          />
+          <Legend wrapperStyle={{ paddingTop: '10px' }} />
+          <Bar dataKey="income" name="Income (₹)" fill="#28a745" radius={[4, 4, 0, 0]} barSize={28} />
+          <Bar dataKey="expense" name="Expense (₹)" fill="#dc3545" radius={[4, 4, 0, 0]} barSize={28} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }

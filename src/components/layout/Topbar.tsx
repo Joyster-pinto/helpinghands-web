@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import styles from '@/app/dashboard/layout.module.css';
-import { Bell, UserCircle, Plus, Check } from 'lucide-react';
+import { Bell, UserCircle, Plus } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Topbar({ user }: { user: any }) {
   const [showNotifications, setShowNotifications] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const notifications = [
     { id: 1, title: 'New Student Application', desc: 'Rahul S. applied for Kalam Scholarship', time: '10m ago' },
@@ -14,12 +15,25 @@ export default function Topbar({ user }: { user: any }) {
     { id: 3, title: 'Board Meeting Tomorrow', desc: 'Quarterly review meeting scheduled at 10 AM', time: '3h ago' },
   ];
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <header className={styles.topbar}>
       <div className={styles.greeting}>
         <h2>Dashboard Overview</h2>
       </div>
-      <div className={styles.actions} style={{ position: 'relative' }}>
+      <div className={styles.actions} style={{ position: 'relative' }} ref={dropdownRef}>
         <Link href="/dashboard/beneficiaries/new" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', fontSize: '13px', textDecoration: 'none' }}>
           <Plus size={16} />
           <span>Add Beneficiary</span>

@@ -101,7 +101,10 @@ export default function Sidebar() {
       <div className={styles.footer}>
         <button 
           className={styles.logoutBtn} 
-          onClick={() => signOut({ callbackUrl: typeof window !== "undefined" ? `${window.location.origin}/login` : "/login" })}
+          onClick={async () => {
+            await signOut({ redirect: false });
+            window.location.href = "/login";
+          }}
         >
           <LogOut size={20} />
           {!collapsed && <span>Sign Out</span>}
