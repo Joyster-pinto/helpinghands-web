@@ -20,7 +20,7 @@ import { mockSponsors as initialMockSponsors } from '@/data/mockData';
 import { Sponsor } from '@/types';
 
 export default function SponsorshipsPage() {
-  const [sponsors, setSponsors] = useState<Sponsor[]>(initialMockSponsors);
+  const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -44,11 +44,11 @@ export default function SponsorshipsPage() {
       try {
         const res = await fetch('/api/sponsors');
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setSponsors(data);
         }
       } catch (err) {
-        console.warn('Failed to load DB sponsors, using fallback data.');
+        console.warn('Failed to load DB sponsors');
       } finally {
         setLoading(false);
       }

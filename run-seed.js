@@ -1,6 +1,7 @@
 const dns = require('dns');
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 const mongoose = require('mongoose');
+
 const MONGODB_URI = 'mongodb+srv://admin:dakshin@cluster0.n604mqn.mongodb.net/helpinghands?retryWrites=true&w=majority&appName=Cluster0';
 
 const mockUsers = [
@@ -39,9 +40,12 @@ const mockBeneficiaries = [
 ];
 
 const mockMembers = [
-  { id: 'm1', name: 'Dr. Bharathiraja', designation: 'Managing Trustee', status: 'active', email: 'bharathi@helpinghands-team.org', phone: '+91 98419 29299', occupation: 'Trust Administrator', totalContributions: 150000, bio: 'Founding member driving educational initiatives since 2016.' },
-  { id: 'm2', name: 'Bright Selvin', designation: 'Trustee & Secretary', status: 'active', email: 'selvin@helpinghands-team.org', phone: '+91 98419 29298', occupation: 'Social Worker', totalContributions: 75000, bio: 'Coordinating beneficiary selection interviews and house visits.' },
-  { id: 'm3', name: 'V. Chinnadurai', designation: 'Treasurer', status: 'active', email: 'chinnadurai@helpinghands-team.org', phone: '+91 98419 29297', occupation: 'Financial Auditor', totalContributions: 100000, bio: 'Overseeing financial audits, 80G tax exemptions and accounts.' }
+  { id: 'm1', name: 'Fr. George Fernandes', designation: 'chairperson', status: 'active', email: 'george@helpinghands-team.org', phone: '+91 98765 11111', address: 'Registered Office, Thaiyur', joinDate: '2018-01-01', occupation: 'Clergy', totalContributions: 150000, bio: 'Founding member and spiritual guide of Helping Hands Team Trust. Has been serving the community for over 20 years.' },
+  { id: 'm2', name: 'Dr. Anitha Shetty', designation: 'vice_chairperson', status: 'active', email: 'anitha@helpinghands-team.org', phone: '+91 98765 22222', address: 'Chennai', joinDate: '2018-03-15', occupation: 'Doctor', totalContributions: 120000, bio: 'Renowned pediatrician who has been instrumental in our health camps and medical support initiatives.' },
+  { id: 'm3', name: 'Mr. Sunil Pinto', designation: 'secretary', status: 'active', email: 'sunil@helpinghands-team.org', phone: '+91 98765 33333', address: 'Chennai', joinDate: '2018-01-01', occupation: 'IT Consultant', totalContributions: 95000, bio: 'Tackly manages day-to-day operations, IT infrastructure, and public relations.' },
+  { id: 'm4', name: 'Mrs. Kavitha Rao', designation: 'treasurer', status: 'active', email: 'kavitha@helpinghands-team.org', phone: '+91 98765 44444', address: 'Chennai', joinDate: '2018-01-01', occupation: 'Chartered Accountant', totalContributions: 110000, bio: 'Expert financial professional ensuring transparent management of trust funds and 80G tax exemptions.' },
+  { id: 'm5', name: 'Mr. Ashok Kumar', designation: 'trustee', status: 'active', email: 'ashok@helpinghands-team.org', phone: '+91 98765 55555', address: 'Kancheepuram', joinDate: '2019-06-01', occupation: 'Businessman', totalContributions: 85000, bio: 'Oversees student interview panels, house verification visits, and scholarship distribution.' },
+  { id: 'm6', name: 'Ms. Reshma Nazir', designation: 'trustee', status: 'active', email: 'reshma@helpinghands-team.org', phone: '+91 98765 66666', address: 'Kelambakkam', joinDate: '2020-01-15', occupation: 'Educationist', totalContributions: 60000, bio: 'Focuses on girls education schemes and career counseling workshops for 12th passed students.' }
 ];
 
 const mockSponsors = [
@@ -70,7 +74,7 @@ async function runSeed() {
 
     const db = mongoose.connection.db;
 
-    console.log('Seeding collections...');
+    console.log('Seeding all 7 collections...');
     await db.collection('users').deleteMany({});
     await db.collection('users').insertMany(mockUsers);
 

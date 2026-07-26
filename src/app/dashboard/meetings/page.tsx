@@ -15,7 +15,7 @@ import { mockMeetings as initialMockMeetings } from '@/data/mockData';
 import { Meeting } from '@/types';
 
 export default function MeetingsPage() {
-  const [meetings, setMeetings] = useState<Meeting[]>(initialMockMeetings);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(true);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
@@ -34,11 +34,11 @@ export default function MeetingsPage() {
       try {
         const res = await fetch('/api/meetings');
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setMeetings(data);
         }
       } catch (err) {
-        console.warn('Failed to load DB meetings, using fallback data.');
+        console.warn('Failed to load DB meetings');
       } finally {
         setLoading(false);
       }

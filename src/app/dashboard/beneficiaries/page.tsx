@@ -8,7 +8,7 @@ import { Beneficiary } from "@/types";
 import { Search, Plus, Filter, Eye, Edit, X, Printer, User, GraduationCap, Phone, MapPin } from "lucide-react";
 
 export default function BeneficiariesPage() {
-  const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>(initialMockBeneficiaries);
+  const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("All");
@@ -26,11 +26,11 @@ export default function BeneficiariesPage() {
       try {
         const res = await fetch("/api/beneficiaries");
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setBeneficiaries(data);
         }
       } catch (err) {
-        console.warn("Failed to load DB beneficiaries, using fallback data.");
+        console.warn("Failed to load DB beneficiaries.");
       } finally {
         setLoading(false);
       }

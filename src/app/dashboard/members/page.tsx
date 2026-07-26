@@ -17,7 +17,7 @@ import { mockMembers as initialMockMembers } from '@/data/mockData';
 import { TrustMember } from '@/types';
 
 export default function MembersPage() {
-  const [members, setMembers] = useState<TrustMember[]>(initialMockMembers);
+  const [members, setMembers] = useState<TrustMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMember, setSelectedMember] = useState<TrustMember | null>(null);
@@ -40,11 +40,11 @@ export default function MembersPage() {
       try {
         const res = await fetch('/api/members');
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setMembers(data);
         }
       } catch (err) {
-        console.warn('Failed to load DB members, using fallback data.');
+        console.warn('Failed to load DB members');
       } finally {
         setLoading(false);
       }

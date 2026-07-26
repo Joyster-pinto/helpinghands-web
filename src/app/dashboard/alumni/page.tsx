@@ -17,7 +17,7 @@ import { mockAlumni as initialMockAlumni } from '@/data/mockData';
 import { Alumni } from '@/types';
 
 export default function AlumniPage() {
-  const [alumniList, setAlumniList] = useState<Alumni[]>(initialMockAlumni);
+  const [alumniList, setAlumniList] = useState<Alumni[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -44,11 +44,11 @@ export default function AlumniPage() {
       try {
         const res = await fetch('/api/alumni');
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setAlumniList(data);
         }
       } catch (err) {
-        console.warn('Failed to load DB alumni, using fallback data.');
+        console.warn('Failed to load DB alumni');
       } finally {
         setLoading(false);
       }

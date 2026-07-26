@@ -15,7 +15,7 @@ import { mockActivities as initialMockActivities } from '@/data/mockData';
 import { Activity } from '@/types';
 
 export default function ActivitiesPage() {
-  const [activities, setActivities] = useState<Activity[]>(initialMockActivities);
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('All');
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
@@ -37,11 +37,11 @@ export default function ActivitiesPage() {
       try {
         const res = await fetch('/api/activities');
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setActivities(data);
         }
       } catch (err) {
-        console.warn('Failed to load DB activities, using fallback data.');
+        console.warn('Failed to load DB activities');
       } finally {
         setLoading(false);
       }
