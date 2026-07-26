@@ -304,7 +304,7 @@ export default function BeneficiariesPage() {
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #e9ecef' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setEditBeneficiary(null)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Changes to MongoDB</button>
+                <button type="submit" className="btn btn-primary">SAVE CHANGES</button>
               </div>
             </form>
           </div>

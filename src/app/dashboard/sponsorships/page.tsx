@@ -339,7 +339,7 @@ export default function SponsorshipsPage() {
 
               <div className={styles.modalActions}>
                 <button type="button" className="btn btn-secondary" onClick={() => setManageSponsor(null)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Changes to MongoDB</button>
+                <button type="submit" className="btn btn-primary">SAVE CHANGES</button>
               </div>
             </form>
           </div>
@@ -399,7 +399,7 @@ export default function SponsorshipsPage() {
 
               <div className={styles.modalActions}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Sponsor to MongoDB</button>
+                <button type="submit" className="btn btn-primary">SAVE SPONSOR</button>
               </div>
             </form>
           </div>

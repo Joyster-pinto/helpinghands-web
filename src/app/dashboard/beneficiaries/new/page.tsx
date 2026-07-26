@@ -429,7 +429,7 @@ export default function NewBeneficiaryPage() {
               ) : (
                 <button type="submit" className="btn btn-primary btn-lg" disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Save size={18} />
-                  <span>{loading ? 'Saving to MongoDB...' : 'SUBMIT & SAVE APPLICATION'}</span>
+                  <span>{loading ? 'SAVING...' : 'SUBMIT & SAVE APPLICATION'}</span>
                 </button>
               )}
             </div>

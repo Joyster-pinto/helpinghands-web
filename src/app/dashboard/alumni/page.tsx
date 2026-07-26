@@ -322,7 +322,7 @@ export default function AlumniPage() {
 
               <div className={styles.modalActions}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Alumnus to MongoDB</button>
+                <button type="submit" className="btn btn-primary">SAVE ALUMNUS</button>
               </div>
             </form>
           </div>

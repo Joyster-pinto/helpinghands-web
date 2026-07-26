@@ -282,7 +282,7 @@ export default function MembersPage() {
 
               <div className={styles.modalActions}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Member to MongoDB</button>
+                <button type="submit" className="btn btn-primary">SAVE MEMBER</button>
               </div>
             </form>
           </div>

@@ -235,7 +235,7 @@ export default function MeetingsPage() {
 
               <div className={styles.modalActions}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowScheduleModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Meeting to MongoDB</button>
+                <button type="submit" className="btn btn-primary">SCHEDULE MEETING</button>
               </div>
             </form>
           </div>

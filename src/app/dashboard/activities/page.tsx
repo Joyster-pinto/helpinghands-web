@@ -301,7 +301,7 @@ export default function ActivitiesPage() {
 
               <div className={styles.modalActions}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Activity to MongoDB</button>
+                <button type="submit" className="btn btn-primary">CREATE ACTIVITY</button>
               </div>
             </form>
           </div>
