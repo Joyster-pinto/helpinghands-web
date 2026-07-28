@@ -13,7 +13,7 @@ import {
   MapPin,
   Calendar
 } from 'lucide-react';
-import { mockMembers as initialMockMembers } from '@/data/mockData';
+
 import { TrustMember } from '@/types';
 
 export default function MembersPage() {

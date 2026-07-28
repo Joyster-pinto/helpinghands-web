@@ -16,7 +16,7 @@ import {
   MessageSquare,
   Edit
 } from 'lucide-react';
-import { mockSponsors as initialMockSponsors } from '@/data/mockData';
+
 import { Sponsor } from '@/types';
 
 export default function SponsorshipsPage() {

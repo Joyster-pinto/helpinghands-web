@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import styles from './page.module.css';
 import { 
   Wallet, 
