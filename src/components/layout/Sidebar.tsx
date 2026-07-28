@@ -51,13 +51,7 @@ export default function Sidebar() {
         { label: "Meetings", href: "/dashboard/meetings", icon: FileText },
         { label: "Accounts", href: "/dashboard/accounts", icon: Wallet },
       ]
-    },
-    {
-      title: "REPORTS",
-      items: [
-        { label: "Reports", href: "/dashboard/reports", icon: BarChart3 },
-      ]
-    }
+
   ];
 
   const memberMenuGroups = [

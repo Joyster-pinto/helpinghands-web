@@ -89,10 +89,7 @@ export default function BeneficiariesPage() {
           <h1 className={styles.title}>Beneficiaries</h1>
           <p className={styles.subtitle}>Manage and track all students supported by the trust.</p>
         </div>
-        <Link href="/dashboard/beneficiaries/new" className={styles.addBtn}>
-          <Plus size={18} />
-          <span>Add Beneficiary</span>
-        </Link>
+
       </div>
 
       <div className={styles.controls}>

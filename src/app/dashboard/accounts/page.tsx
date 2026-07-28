@@ -141,10 +141,7 @@ export default function AccountsPage() {
             <Download size={18} />
             Export CSV
           </button>
-          <button className={styles.btnPrimary} onClick={() => setShowAddModal(true)}>
-            <Plus size={18} />
-            Add Transaction
-          </button>
+
         </div>
       </div>
 

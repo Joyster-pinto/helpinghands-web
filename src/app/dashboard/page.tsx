@@ -43,10 +43,6 @@ export default function DashboardHome() {
           <p className={styles.subtitle}>Here's what's happening with Helping Hands today.</p>
         </div>
         <div className={styles.actions}>
-          <button className={styles.actionBtn}>
-            <UserPlus size={16} />
-            <span>Add Beneficiary</span>
-          </button>
         </div>
       </div>
 
@@ -206,10 +202,6 @@ export default function DashboardHome() {
         <div className={styles.quickActionsCard}>
           <h3 className={styles.cardTitle}>Quick Actions</h3>
           <div className={styles.actionGrid}>
-            <Link href="/dashboard/beneficiaries/new" className={styles.actionGridItem}>
-              <div className={styles.actionIcon}><UserPlus size={20} /></div>
-              <span>New Beneficiary</span>
-            </Link>
             <Link href="/dashboard/accounts" className={styles.actionGridItem}>
               <div className={styles.actionIcon}><ArrowRightLeft size={20} /></div>
               <span>Record Transaction</span>
@@ -217,10 +209,6 @@ export default function DashboardHome() {
             <Link href="/dashboard/meetings" className={styles.actionGridItem}>
               <div className={styles.actionIcon}><Calendar size={20} /></div>
               <span>Schedule Meeting</span>
-            </Link>
-            <Link href="/dashboard/reports" className={styles.actionGridItem}>
-              <div className={styles.actionIcon}><FileBarChart size={20} /></div>
-              <span>Generate Report</span>
             </Link>
           </div>
         </div>
