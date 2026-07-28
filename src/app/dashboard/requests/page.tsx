@@ -102,7 +102,26 @@ export default function RequestsPage() {
           {(req.status === 'assigned_for_verification' || req.status === 'verified_and_approved' || req.status === 'funded') && (
             <div style={{ background: '#e9ecef', padding: 15, borderRadius: 6, marginBottom: 15 }}>
               <strong>Assigned To:</strong> {req.assignedMemberEmail} <br/>
-              <strong>Verification Report:</strong> {req.verificationReport || 'Pending submission from member...'}
+              <strong style={{ display: 'block', marginTop: 10, marginBottom: 10 }}>Verification Report:</strong>
+              {!req.verificationReport ? (
+                <span style={{ color: '#6c757d' }}>Pending submission from member...</span>
+              ) : (
+                <div style={{ background: '#fff', padding: 15, borderRadius: 6, border: '1px solid #ced4da', maxHeight: 300, overflowY: 'auto' }}>
+                  {(() => {
+                    try {
+                      const parsed = JSON.parse(req.verificationReport);
+                      return Object.entries(parsed).map(([q, a], idx) => (
+                        <div key={idx} style={{ marginBottom: 10, paddingBottom: 10, borderBottom: '1px dashed #eee' }}>
+                          <div style={{ fontWeight: 600, fontSize: 13, color: '#495057' }}>{q}</div>
+                          <div style={{ fontSize: 14, color: '#212529', marginTop: 4 }}>{a as string || '-'}</div>
+                        </div>
+                      ));
+                    } catch (e) {
+                      return <div>{req.verificationReport}</div>;
+                    }
+                  })()}
+                </div>
+              )}
             </div>
           )}
 

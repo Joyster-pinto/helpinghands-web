@@ -3,6 +3,34 @@
 import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 
+const VERIFICATION_QUESTIONS = [
+  'Student Name',
+  'Applying for which scholarship scheme',
+  'Student Contact Number',
+  'Whether the student belongs to existing or new beneficiary',
+  'School / College Name',
+  'School / College Address and contact Number',
+  'Class / Year with semester',
+  'Parent Name',
+  'Parent Contact Number',
+  'Address',
+  'Residing in Own house or Rental house',
+  'Last Year Total Fee',
+  'Current Year Total Fee',
+  'Whether availed scholarship last year?',
+  'Whether availed any other scholarship other than Helping Hands Team Trust',
+  'If availed scholarship last year, whether original fee receipt has been submitted?',
+  'Last Year Quarterly Exam mark percentage / Semester1 % or CGPA',
+  'All marksheets verified by the panel (Yes/No)',
+  'If any documents are missing, mention the missing documents',
+  'Are you satisfied with the performance of the student last year?',
+  'If not satisfied, mention the reason',
+  'Current year official fee structure verified by the panel (Yes/No)',
+  'Panel members detailed comment regarding the student',
+  'Panel Members Recommendations (Approve/Reject)',
+  'If rejected, mention the specific reason for rejection'
+];
+
 export default function TrustMemberDashboard() {
   const { data: session } = useSession();
   const email = session?.user?.email;
@@ -12,10 +40,11 @@ export default function TrustMemberDashboard() {
   const [meetings, setMeetings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Modals
+  // Verification Report Modal
   const [reportModal, setReportModal] = useState<any>(null);
-  const [reportText, setReportText] = useState('');
+  const [formAnswers, setFormAnswers] = useState<Record<string, string>>({});
   
+  // Donate Modal
   const [donateModal, setDonateModal] = useState<any>(null);
   const [amount, setAmount] = useState('');
   const [txnRef, setTxnRef] = useState('');
@@ -43,16 +72,28 @@ export default function TrustMemberDashboard() {
     setLoading(false);
   };
 
+  const handleAnswerChange = (q: string, val: string) => {
+    setFormAnswers(prev => ({ ...prev, [q]: val }));
+  };
+
   const submitReport = async () => {
-    if (!reportText) return alert('Enter report text');
+    // Basic validation
+    const answeredCount = Object.values(formAnswers).filter(Boolean).length;
+    if (answeredCount < 5) {
+      return alert("Please fill out the form fields before submitting.");
+    }
+    
+    // Save as JSON string
+    const reportJson = JSON.stringify(formAnswers);
+    
     await fetch('/api/contact', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: reportModal._id, verificationReport: reportText })
+      body: JSON.stringify({ id: reportModal._id, verificationReport: reportJson })
     });
     alert('Verification Report submitted to Admin!');
     setReportModal(null);
-    setReportText('');
+    setFormAnswers({});
     fetchData();
   };
 
@@ -76,7 +117,7 @@ export default function TrustMemberDashboard() {
     fetchData();
   };
 
-  if (loading) return <div>Loading Member Dashboard...</div>;
+  if (loading) return <div style={{ padding: 40 }}>Loading Member Dashboard...</div>;
 
   return (
     <div>
@@ -97,7 +138,7 @@ export default function TrustMemberDashboard() {
                 {act.verificationReport ? (
                   <div style={{ marginTop: 15, color: '#28a745', fontWeight: 'bold' }}>✓ Report Submitted. Awaiting Admin Approval.</div>
                 ) : (
-                  <button onClick={() => setReportModal(act)} style={{ marginTop: 15, padding: '8px 16px', background: '#007bff', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
+                  <button onClick={() => setReportModal(act)} style={{ marginTop: 15, padding: '8px 16px', background: '#007bff', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}>
                     Fill Verification Report
                   </button>
                 )}
@@ -123,8 +164,8 @@ export default function TrustMemberDashboard() {
                   </div>
                   
                   <div style={{ fontSize: 14, color: '#495057', marginBottom: 15 }}>
-                    <strong>Admin Verification Note:</strong> <br/>
-                    {don.verificationReport}
+                    <strong>Admin Verification Approval Note:</strong> <br/>
+                    Verified and ready for funding.
                   </div>
 
                   <div style={{ marginBottom: 20 }}>
@@ -168,22 +209,31 @@ export default function TrustMemberDashboard() {
         )}
       </div>
 
-
-      {/* Report Modal */}
+      {/* Verification Report Modal (Large Form) */}
       {reportModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', padding: 30, borderRadius: 8, width: 400 }}>
-            <h3 style={{ marginTop: 0 }}>Verification Report for {reportModal.name}</h3>
-            <textarea 
-              rows={5} 
-              style={{ width: '100%', padding: 10, marginTop: 10, marginBottom: 20, border: '1px solid #ccc', borderRadius: 4 }}
-              placeholder="Enter your verification findings here..."
-              value={reportText}
-              onChange={e => setReportText(e.target.value)}
-            />
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <button onClick={() => setReportModal(null)} style={{ padding: '8px 16px', border: '1px solid #ccc', background: '#fff', borderRadius: 4, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={submitReport} style={{ padding: '8px 16px', background: '#007bff', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>Submit to Admin</button>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', padding: 30, borderRadius: 12, width: '90%', maxWidth: 800, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+            <h2 style={{ marginTop: 0, borderBottom: '1px solid #eee', paddingBottom: 15 }}>Helping Hands Team Trust Selection Interview (2026-27)</h2>
+            <p style={{ color: '#666', marginBottom: 20 }}>Please visit {reportModal.name}'s house, speak directly with them, and accurately fill out the details below.</p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {VERIFICATION_QUESTIONS.map((q, idx) => (
+                <div key={idx} style={{ background: '#f8f9fa', padding: 15, borderRadius: 8, border: '1px solid #e9ecef' }}>
+                  <label style={{ display: 'block', fontWeight: 600, marginBottom: 10 }}>{q}</label>
+                  <input 
+                    type="text" 
+                    value={formAnswers[q] || ''} 
+                    onChange={e => handleAnswerChange(q, e.target.value)}
+                    placeholder="Enter answer..."
+                    style={{ width: '100%', padding: 10, border: '1px solid #ced4da', borderRadius: 4, fontSize: 14 }}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 30, borderTop: '1px solid #eee', paddingTop: 20 }}>
+              <button onClick={() => setReportModal(null)} style={{ padding: '10px 20px', border: '1px solid #ccc', background: '#fff', borderRadius: 6, cursor: 'pointer', fontWeight: 'bold' }}>Cancel</button>
+              <button onClick={submitReport} style={{ padding: '10px 20px', background: '#007bff', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 'bold' }}>Submit to Admin</button>
             </div>
           </div>
         </div>
@@ -221,7 +271,6 @@ export default function TrustMemberDashboard() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
