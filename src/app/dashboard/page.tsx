@@ -215,19 +215,7 @@ export default function DashboardHome() {
           </div>
         </div>
 
-        <div className={styles.quickActionsCard}>
-          <h3 className={styles.cardTitle}>Quick Actions</h3>
-          <div className={styles.actionGrid}>
-            <Link href="/dashboard/accounts" className={styles.actionGridItem}>
-              <div className={styles.actionIcon}><ArrowRightLeft size={20} /></div>
-              <span>Record Transaction</span>
-            </Link>
-            <Link href="/dashboard/meetings" className={styles.actionGridItem}>
-              <div className={styles.actionIcon}><Calendar size={20} /></div>
-              <span>Schedule Meeting</span>
-            </Link>
-          </div>
-        </div>
+
       </div>
     </div>
   );

@@ -137,10 +137,7 @@ export default function SponsorshipsPage() {
           <h1 className={styles.title}>Sponsorship Management</h1>
           <p className={styles.subtitle}>Manage corporate and individual sponsors</p>
         </div>
-        <button className={styles.btnPrimary} onClick={() => setShowAddModal(true)}>
-          <Plus size={18} />
-          Add Sponsor
-        </button>
+
       </div>
 
       <div className={styles.statsGrid}>

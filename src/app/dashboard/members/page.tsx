@@ -115,10 +115,6 @@ export default function MembersPage() {
           <p className={styles.subtitle}>Manage trust members, core committee, and active volunteers</p>
         </div>
         <div className={styles.actions}>
-          <button className={styles.btnPrimary} onClick={() => setShowAddModal(true)}>
-            <Plus size={18} />
-            Add Member
-          </button>
         </div>
       </div>
 

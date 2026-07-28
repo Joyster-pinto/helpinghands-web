@@ -121,10 +121,7 @@ export default function AlumniPage() {
           <h1 className={styles.title}>Alumni Directory</h1>
           <p className={styles.subtitle}>Track and engage with past beneficiaries</p>
         </div>
-        <button className={styles.btnPrimary} onClick={() => setShowAddModal(true)}>
-          <Plus size={18} />
-          Add Alumni
-        </button>
+
       </div>
 
       <div className={styles.toolbar}>
