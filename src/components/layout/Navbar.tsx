@@ -39,9 +39,7 @@ const Navbar = () => {
               <a href="https://twitter.com" target="_blank" rel="noreferrer" title="Twitter"><Twitter size={14} /></a>
               <a href="https://linkedin.com" target="_blank" rel="noreferrer" title="LinkedIn"><Linkedin size={14} /></a>
             </div>
-            <Link href="/login" className={styles.loginBtn}>
-              <User size={14} /> Trust Portal Login
-            </Link>
+
           </div>
         </div>
       </div>
@@ -173,7 +171,7 @@ const Navbar = () => {
             <li><Link href="/gallery" className={styles.mobileLink}>Gallery</Link></li>
             <li><Link href="/newsletters" className={styles.mobileLink}>Newsletters</Link></li>
             <li><Link href="/contact" className={styles.mobileLink}>Contact Us</Link></li>
-            <li><Link href="/login" className={styles.mobileLoginBtn}>Trust Portal Login</Link></li>
+
           </ul>
         </div>
       )}
