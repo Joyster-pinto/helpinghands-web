@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     await Transaction.create({
       type: 'income',
       amount,
-      description: `Donation from ${trustMemberEmail}`,
+      description: `Donation from ${trustMemberEmail} (Ref: ${paymentProofReference || 'N/A'})`,
       contactRequestId
     });
 
