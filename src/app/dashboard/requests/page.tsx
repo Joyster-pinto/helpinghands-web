@@ -185,7 +185,7 @@ export default function RequestsPage() {
               <select className={styles.select} value={selectedMember} onChange={(e) => setSelectedMember(e.target.value)}>
                 <option value="">-- Choose Member --</option>
                 {members.map(m => (
-                  <option key={m.id || m._id} value={m.id || m._id}>{m.name} ({m.designation})</option>
+                  <option key={m.email || m.id || m._id} value={m.email}>{m.name} ({m.designation})</option>
                 ))}
               </select>
             </div>

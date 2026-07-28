@@ -7,7 +7,8 @@ import { FileText, Heart, IndianRupee, MapPin, Phone, User, CheckCircle, X } fro
 
 export default function TrustMemberDashboard() {
   const { data: session } = useSession();
-  const trustMemberId = (session?.user as any)?.id || 'tm_test_123'; // fallback for testing
+  const trustMemberId = (session?.user as any)?.id || 'tm_test_123';
+  const trustMemberEmail = session?.user?.email || 'test@email.com';
   
   const [assignedRequests, setAssignedRequests] = useState<any[]>([]);
   const [activeDonations, setActiveDonations] = useState<any[]>([]);
@@ -23,7 +24,7 @@ export default function TrustMemberDashboard() {
     async function loadData() {
       try {
         const [assignedRes, publicRes] = await Promise.all([
-          fetch(`/api/contact?assignedTo=${trustMemberId}`),
+          fetch(`/api/contact?assignedTo=${encodeURIComponent(trustMemberEmail)}`),
           fetch(`/api/contact`) // We will filter published on client for simplicity, or we should add a query param
         ]);
         
@@ -43,8 +44,10 @@ export default function TrustMemberDashboard() {
         setLoading(false);
       }
     }
-    loadData();
-  }, [trustMemberId]);
+    if (trustMemberEmail) {
+      loadData();
+    }
+  }, [trustMemberEmail]);
 
   const handleSubmitReport = async () => {
     if (!reportModal || !reportText) return;
