@@ -20,14 +20,23 @@ export default function ContactPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setSubmittedData({
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        refId: `HH-INQ-${Date.now().toString().slice(-6)}`,
-        message: 'Thank you! Your query has been recorded. Our team will contact you shortly.',
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
       });
+      const data = await res.json();
+      if (data.success) {
+        setSubmittedData({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          refId: data.refId,
+          message: data.message,
+        });
+      } else {
+        alert(data.error || 'Failed to submit message.');
+      }
     } catch (err) {
       alert('An error occurred. Please try again.');
     } finally {
