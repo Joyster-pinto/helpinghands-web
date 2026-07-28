@@ -24,7 +24,7 @@ import {
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const role = (session?.user as any)?.role || 'admin'; // default to admin for preview
 
   const adminMenuGroups = [
@@ -64,6 +64,20 @@ export default function Sidebar() {
   ];
 
   const menuGroups = role === 'admin' ? adminMenuGroups : memberMenuGroups;
+
+  // Prevent flashing of admin menu for non-admin users on reload
+  if (status === 'loading') {
+    return (
+      <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}>
+        <div className={styles.header}>
+          <div className={styles.logo}>
+            <HandHeart size={28} color="var(--color-primary)" />
+            {!collapsed && <span>Helping Hands</span>}
+          </div>
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}>
