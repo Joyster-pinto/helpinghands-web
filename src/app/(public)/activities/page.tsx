@@ -1,6 +1,5 @@
 'use client';
 
-import React, { useState } from 'react';
 import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, Users, IndianRupee } from 'lucide-react';
 import styles from './page.module.css';

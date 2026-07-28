@@ -27,7 +27,6 @@ import {
   Pie,
   Cell
 } from 'recharts';
-} from 'recharts';
 const reportTypes = [
   { id: 'financial', title: 'Financial Report', icon: Wallet },
   { id: 'beneficiary', title: 'Beneficiary Report', icon: Users },

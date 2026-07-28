@@ -1,15 +1,33 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "./page.module.css";
-import { mockBeneficiaries as beneficiaries } from "@/data/mockData";
 import { Beneficiary, AcademicRecord, SupportRecord } from "@/types";
 import { ArrowLeft, Edit, Download, GraduationCap, MapPin, Phone, User, Calendar, Briefcase, FileText } from "lucide-react";
 
 export default function BeneficiaryDetail({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const beneficiary: Beneficiary | undefined = beneficiaries.find((b: Beneficiary) => b.id === resolvedParams.id);
+  const [beneficiary, setBeneficiary] = useState<Beneficiary | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchBen() {
+      try {
+        const res = await fetch('/api/beneficiaries');
+        const data = await res.json();
+        const found = data.find((b: any) => b.id === resolvedParams.id);
+        setBeneficiary(found || null);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchBen();
+  }, [resolvedParams.id]);
+
+  if (loading) return <div className={styles.container}>Loading...</div>;
 
   if (!beneficiary) {
     return <div className={styles.container}>Beneficiary not found</div>;
