@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/response';
+import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import TrustMember from '@/models/TrustMember';
 import User from '@/models/User';
