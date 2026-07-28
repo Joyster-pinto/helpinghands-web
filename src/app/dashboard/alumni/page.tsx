@@ -13,7 +13,7 @@ import {
   Mail,
   Phone
 } from 'lucide-react';
-import { mockAlumni as initialMockAlumni } from '@/data/mockData';
+
 import { Alumni } from '@/types';
 
 export default function AlumniPage() {

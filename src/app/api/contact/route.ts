@@ -38,3 +38,43 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error: error.message || 'Failed to send message.' }, { status: 500 });
   }
 }
+
+export async function GET(req: Request) {
+  try {
+    await connectToDatabase();
+    const { searchParams } = new URL(req.url);
+    const assignedTo = searchParams.get('assignedTo');
+    
+    let query: any = {};
+    if (assignedTo) {
+      query.assignedTo = assignedTo;
+    }
+    
+    const contacts = await Contact.find(query).sort({ createdAt: -1 });
+    return NextResponse.json(contacts);
+  } catch (error) {
+    return NextResponse.json([]);
+  }
+}
+
+export async function PUT(req: Request) {
+  try {
+    await connectToDatabase();
+    const body = await req.json();
+    const { id, ...updateData } = body;
+    
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'ID is required' }, { status: 400 });
+    }
+    
+    const updatedContact = await Contact.findByIdAndUpdate(id, updateData, { new: true });
+    
+    if (!updatedContact) {
+      return NextResponse.json({ success: false, error: 'Contact not found' }, { status: 404 });
+    }
+    
+    return NextResponse.json({ success: true, data: updatedContact });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}

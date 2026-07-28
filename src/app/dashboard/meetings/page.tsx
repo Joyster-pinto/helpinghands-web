@@ -11,7 +11,7 @@ import {
   ChevronDown,
   X
 } from 'lucide-react';
-import { mockMeetings as initialMockMeetings } from '@/data/mockData';
+
 import { Meeting } from '@/types';
 
 export default function MeetingsPage() {

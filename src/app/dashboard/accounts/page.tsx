@@ -12,17 +12,34 @@ import {
   Download,
   X
 } from 'lucide-react';
-import { mockTransactions as initialTransactions } from '@/data/mockData';
 
 // Chart component needs to be client-side
 import dynamic from 'next/dynamic';
 const IncomeExpenseChart = dynamic(() => import('./Chart'), { ssr: false });
 
 export default function AccountsPage() {
-  const [transactions, setTransactions] = useState(initialTransactions);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+
+  useEffect(() => {
+    async function loadTransactions() {
+      try {
+        const res = await fetch('/api/transactions');
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setTransactions(data);
+        }
+      } catch (err) {
+        console.warn('Failed to load DB transactions');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadTransactions();
+  }, []);
 
   const [formData, setFormData] = useState({
     type: 'donation',
@@ -77,10 +94,10 @@ export default function AccountsPage() {
     URL.revokeObjectURL(url);
   };
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newTx = {
-      id: `tx${transactions.length + 1}`,
+      id: `tx${Date.now()}`,
       date: new Date().toISOString().split('T')[0],
       type: formData.type as any,
       category: formData.category as any,
@@ -90,7 +107,23 @@ export default function AccountsPage() {
       receiptNumber: formData.receiptNumber || `REC-${Math.floor(1000 + Math.random() * 9000)}`,
       recordedBy: 'Fr. Administrator',
     };
-    setTransactions([newTx as any, ...transactions]);
+    
+    try {
+      const res = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTx),
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        setTransactions([resData.data, ...transactions]);
+      } else {
+        setTransactions([newTx as any, ...transactions]);
+      }
+    } catch (err) {
+      setTransactions([newTx as any, ...transactions]);
+    }
+    
     setShowAddModal(false);
     setFormData({ type: 'donation', category: 'general_donation', amount: '', description: '', paymentMode: 'upi', receiptNumber: '', paidTo: '', receivedFrom: '' });
     alert('Transaction recorded successfully!');
@@ -161,7 +194,7 @@ export default function AccountsPage() {
         <div className={styles.chartSection}>
           <h2 className={styles.sectionTitle}>Income vs Expenses</h2>
           <div className={styles.chartContainer}>
-            <IncomeExpenseChart />
+            <IncomeExpenseChart transactions={transactions} />
           </div>
         </div>
 

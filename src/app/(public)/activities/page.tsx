@@ -1,12 +1,32 @@
 'use client';
 
 import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, Users, IndianRupee } from 'lucide-react';
 import styles from './page.module.css';
-import { mockActivities as activities } from '@/data/mockData';
 import { Activity } from '@/types';
 
 export default function ActivitiesPage() {
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadActivities() {
+      try {
+        const res = await fetch('/api/activities');
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setActivities(data);
+        }
+      } catch (err) {
+        console.warn('Failed to load DB activities');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadActivities();
+  }, []);
+
   const [filter, setFilter] = useState('All');
   
   const categories = ['All', 'Education', 'Health', 'Outreach', 'Career Development'];

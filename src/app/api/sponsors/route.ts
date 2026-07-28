@@ -1,18 +1,18 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Sponsor from '@/models/Sponsor';
-import { mockSponsors } from '@/data/mockData';
+
 
 export async function GET() {
   try {
     await connectToDatabase();
     const dbSponsors = await Sponsor.find({}).sort({ createdAt: -1 });
     if (dbSponsors.length === 0) {
-      return NextResponse.json(mockSponsors);
+      return NextResponse.json([]);
     }
     return NextResponse.json(dbSponsors);
   } catch (error) {
-    return NextResponse.json(mockSponsors);
+    return NextResponse.json([]);
   }
 }
 

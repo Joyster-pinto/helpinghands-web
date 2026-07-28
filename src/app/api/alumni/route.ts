@@ -1,18 +1,18 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Alumni from '@/models/Alumni';
-import { mockAlumni } from '@/data/mockData';
+
 
 export async function GET() {
   try {
     await connectToDatabase();
     const dbAlumni = await Alumni.find({}).sort({ createdAt: -1 });
     if (dbAlumni.length === 0) {
-      return NextResponse.json(mockAlumni);
+      return NextResponse.json([]);
     }
     return NextResponse.json(dbAlumni);
   } catch (error) {
-    return NextResponse.json(mockAlumni);
+    return NextResponse.json([]);
   }
 }
 

@@ -27,8 +27,7 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { mockBeneficiaries, mockTransactions, mockActivities, mockMembers, mockSponsors, mockAlumni } from '@/data/mockData';
-
+} from 'recharts';
 const reportTypes = [
   { id: 'financial', title: 'Financial Report', icon: Wallet },
   { id: 'beneficiary', title: 'Beneficiary Report', icon: Users },
@@ -44,6 +43,32 @@ export default function ReportsPage() {
   const [selectedType, setSelectedType] = useState('financial');
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
   const [appliedFilter, setAppliedFilter] = useState({ from: '', to: '' });
+  const [data, setData] = useState({
+    beneficiaries: [] as any[],
+    transactions: [] as any[],
+    activities: [] as any[],
+    sponsors: [] as any[],
+    alumni: [] as any[],
+    members: [] as any[]
+  });
+  const [loading, setLoading] = useState(true);
+
+  React.useEffect(() => {
+    async function loadData() {
+      try {
+        const res = await fetch('/api/reports');
+        const json = await res.json();
+        if (json) {
+          setData(json);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
 
   const handleGenerateReport = () => {
     setAppliedFilter({ from: dateRange.from, to: dateRange.to });
@@ -55,7 +80,7 @@ export default function ReportsPage() {
   };
 
   // Filter transactions by date if appliedFilter is set
-  const filteredTransactions = mockTransactions.filter(t => {
+  const filteredTransactions = data.transactions.filter(t => {
     if (!appliedFilter.from && !appliedFilter.to) return true;
     const txDate = new Date(t.date).getTime();
     const fromDate = appliedFilter.from ? new Date(appliedFilter.from).getTime() : 0;
@@ -81,7 +106,7 @@ export default function ReportsPage() {
   }, []);
 
   // Beneficiary Data Processing
-  const schemeCounts = mockBeneficiaries.reduce((acc: any, curr) => {
+  const schemeCounts = data.beneficiaries.reduce((acc: any, curr) => {
     acc[curr.scheme] = (acc[curr.scheme] || 0) + 1;
     return acc;
   }, {});
@@ -120,27 +145,27 @@ export default function ReportsPage() {
       });
     } else if (selectedType === 'beneficiary') {
       csv = 'ID,Full Name,Scheme,Status,Institution,Class,Total Support (INR)\n';
-      mockBeneficiaries.forEach(b => {
+      data.beneficiaries.forEach(b => {
         csv += `"${b.id}","${b.fullName}","${b.scheme}","${b.status}","${b.currentInstitution}","${b.currentClass}",${b.totalSupportReceived}\n`;
       });
     } else if (selectedType === 'activity') {
       csv = 'Title,Date,Location,Status,Budget (INR),Actual Spent (INR),Beneficiaries Covered\n';
-      mockActivities.forEach(a => {
+      data.activities.forEach(a => {
         csv += `"${a.title}","${a.date}","${a.location}","${a.status}",${a.budget},${a.actualSpent},${a.beneficiariesCovered}\n`;
       });
     } else if (selectedType === 'sponsorship') {
       csv = 'Sponsor Name,Type,Email,Committed (INR),Paid (INR),Beneficiaries Count\n';
-      mockSponsors.forEach(s => {
+      data.sponsors.forEach(s => {
         csv += `"${s.name}","${s.type}","${s.email}",${s.totalCommitted},${s.totalPaid},${s.beneficiaries ? s.beneficiaries.length : 0}\n`;
       });
     } else if (selectedType === 'alumni') {
       csv = 'Name,Degree,Institution,Graduation Year,Status,Role,Organization\n';
-      mockAlumni.forEach(al => {
+      data.alumni.forEach(al => {
         csv += `"${al.name}","${al.degree}","${al.institution}","${al.graduationYear}","${al.currentStatus}","${al.currentRole}","${al.currentOrganization}"\n`;
       });
     } else {
       csv = 'Name,Designation,Email,Phone,Status,Total Contributions (INR)\n';
-      mockMembers.forEach(m => {
+      data.members.forEach(m => {
         csv += `"${m.name}","${m.designation}","${m.email}","${m.phone}","${m.status}",${m.totalContributions}\n`;
       });
     }
@@ -261,7 +286,7 @@ export default function ReportsPage() {
             <div className={styles.summaryStats}>
               <div className={styles.statBox}>
                 <p>Total Beneficiaries</p>
-                <h3>{mockBeneficiaries.length}</h3>
+                <h3>{data.beneficiaries.length}</h3>
               </div>
               <div className={styles.statBox}>
                 <p>Active Schemes</p>

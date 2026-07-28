@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./page.module.css";
-import { mockBeneficiaries as initialMockBeneficiaries } from "@/data/mockData";
+
 import { Beneficiary } from "@/types";
 import { Search, Plus, Filter, Eye, Edit, X, Printer, User, GraduationCap, Phone, MapPin } from "lucide-react";
 

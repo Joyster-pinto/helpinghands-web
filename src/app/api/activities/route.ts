@@ -1,18 +1,18 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Activity from '@/models/Activity';
-import { mockActivities } from '@/data/mockData';
+
 
 export async function GET() {
   try {
     await connectToDatabase();
     const dbActivities = await Activity.find({}).sort({ createdAt: -1 });
     if (dbActivities.length === 0) {
-      return NextResponse.json(mockActivities);
+      return NextResponse.json([]);
     }
     return NextResponse.json(dbActivities);
   } catch (error) {
-    return NextResponse.json(mockActivities);
+    return NextResponse.json([]);
   }
 }
 

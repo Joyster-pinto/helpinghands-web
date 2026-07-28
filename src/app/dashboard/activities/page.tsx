@@ -11,7 +11,7 @@ import {
   X,
   Briefcase
 } from 'lucide-react';
-import { mockActivities as initialMockActivities } from '@/data/mockData';
+
 import { Activity } from '@/types';
 
 export default function ActivitiesPage() {

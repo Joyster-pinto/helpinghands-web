@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import styles from "./Sidebar.module.css";
 import { 
   LayoutDashboard, 
@@ -24,8 +24,10 @@ import {
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role || 'admin'; // default to admin for preview
 
-  const menuGroups = [
+  const adminMenuGroups = [
     {
       title: "MAIN",
       items: [
@@ -44,6 +46,7 @@ export default function Sidebar() {
     {
       title: "OPERATIONS",
       items: [
+        { label: "Requests", href: "/dashboard/requests", icon: FileText },
         { label: "Activities", href: "/dashboard/activities", icon: Calendar },
         { label: "Meetings", href: "/dashboard/meetings", icon: FileText },
         { label: "Accounts", href: "/dashboard/accounts", icon: Wallet },
@@ -56,6 +59,17 @@ export default function Sidebar() {
       ]
     }
   ];
+
+  const memberMenuGroups = [
+    {
+      title: "MAIN",
+      items: [
+        { label: "Member Dashboard", href: "/dashboard/trust-member", icon: LayoutDashboard },
+      ]
+    }
+  ];
+
+  const menuGroups = role === 'admin' ? adminMenuGroups : memberMenuGroups;
 
   return (
     <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}>

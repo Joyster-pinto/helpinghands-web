@@ -1,18 +1,18 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import TrustMember from '@/models/TrustMember';
-import { mockMembers } from '@/data/mockData';
+
 
 export async function GET() {
   try {
     await connectToDatabase();
     const dbMembers = await TrustMember.find({}).sort({ createdAt: -1 });
     if (dbMembers.length === 0) {
-      return NextResponse.json(mockMembers);
+      return NextResponse.json([]);
     }
     return NextResponse.json(dbMembers);
   } catch (error) {
-    return NextResponse.json(mockMembers);
+    return NextResponse.json([]);
   }
 }
 

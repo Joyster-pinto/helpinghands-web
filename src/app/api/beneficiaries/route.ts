@@ -1,18 +1,18 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Beneficiary from '@/models/Beneficiary';
-import { mockBeneficiaries } from '@/data/mockData';
+
 
 export async function GET() {
   try {
     await connectToDatabase();
     const dbBeneficiaries = await Beneficiary.find({}).sort({ createdAt: -1 });
     if (dbBeneficiaries.length === 0) {
-      return NextResponse.json(mockBeneficiaries);
+      return NextResponse.json([]);
     }
     return NextResponse.json(dbBeneficiaries);
   } catch (error) {
-    return NextResponse.json(mockBeneficiaries);
+    return NextResponse.json([]);
   }
 }
 

@@ -2,7 +2,6 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import connectToDatabase from "@/lib/mongodb";
 import User from "@/models/User";
-import { mockUsers } from "@/data/mockData";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -32,19 +31,6 @@ export const authOptions: NextAuthOptions = {
           console.warn("MongoDB connection fallback to local data:", dbError);
         }
 
-        // Fallback to mock data if DB is offline or during static compilation
-        const mockUser = mockUsers.find(
-          (u) => u.email === credentials.email && u.password === credentials.password
-        );
-
-        if (mockUser) {
-          return {
-            id: mockUser.id,
-            name: mockUser.name,
-            email: mockUser.email,
-            role: mockUser.role,
-          };
-        }
 
         return null;
       }
