@@ -13,6 +13,8 @@ import {
   FileBarChart
 } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, CartesianGrid } from "recharts";
 
 const financesData = [
@@ -33,7 +35,21 @@ const schemeData = [
 ];
 
 export default function DashboardHome() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  
+  useEffect(() => {
+    if (status === "authenticated") {
+      const role = (session?.user as any)?.role;
+      if (role === "trust_member") {
+        router.replace("/dashboard/trust-member");
+      }
+    }
+  }, [session, status, router]);
+
+  if (status === "loading" || (session?.user as any)?.role === "trust_member") {
+    return <div style={{ padding: 40, textAlign: 'center' }}>Loading your dashboard...</div>;
+  }
   
   return (
     <div className={styles.container}>
