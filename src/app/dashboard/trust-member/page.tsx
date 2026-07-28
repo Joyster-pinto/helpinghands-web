@@ -4,31 +4,37 @@ import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 
 const VERIFICATION_QUESTIONS = [
-  'Student Name',
-  'Applying for which scholarship scheme',
-  'Student Contact Number',
-  'Whether the student belongs to existing or new beneficiary',
-  'School / College Name',
-  'School / College Address and contact Number',
-  'Class / Year with semester',
-  'Parent Name',
-  'Parent Contact Number',
-  'Address',
-  'Residing in Own house or Rental house',
-  'Last Year Total Fee',
-  'Current Year Total Fee',
-  'Whether availed scholarship last year?',
-  'Whether availed any other scholarship other than Helping Hands Team Trust',
-  'If availed scholarship last year, whether original fee receipt has been submitted?',
-  'Last Year Quarterly Exam mark percentage / Semester1 % or CGPA',
-  'All marksheets verified by the panel (Yes/No)',
-  'If any documents are missing, mention the missing documents',
-  'Are you satisfied with the performance of the student last year?',
-  'If not satisfied, mention the reason',
-  'Current year official fee structure verified by the panel (Yes/No)',
-  'Panel members detailed comment regarding the student',
-  'Panel Members Recommendations (Approve/Reject)',
-  'If rejected, mention the specific reason for rejection'
+  { label: 'Student Name', type: 'text' },
+  { label: 'Applying for which scholarship scheme', type: 'select', options: [
+      'Kamarajar Scholarship Scheme (School)',
+      'Kalam Scholarship Scheme (College)',
+      'Mr.K.Thiyagarajan Scholarship Scheme (12th single parent girl child)',
+      'Velicham NEET 7.5 Scholarship Scheme (12th completed Government school child)'
+    ] 
+  },
+  { label: 'Student Contact Number', type: 'text' },
+  { label: 'Whether the student belongs to existing or new beneficiary', type: 'select', options: ['Existing Beneficiary', 'New Beneficiary'] },
+  { label: 'School / College Name', type: 'text' },
+  { label: 'School / College Address and contact Number', type: 'text' },
+  { label: 'Class / Year with semester', type: 'text' },
+  { label: 'Parent Name', type: 'text' },
+  { label: 'Parent Contact Number', type: 'text' },
+  { label: 'Address', type: 'textarea' },
+  { label: 'Residing in Own house or Rental house', type: 'select', options: ['Own house', 'Rental house'] },
+  { label: 'Last Year Total Fee', type: 'text' },
+  { label: 'Current Year Total Fee', type: 'text' },
+  { label: 'Whether availed scholarship last year?', type: 'select', options: ['Yes', 'No'] },
+  { label: 'Whether availed any other scholarship other than Helping Hands Team Trust', type: 'select', options: ['Yes', 'No'] },
+  { label: 'If availed scholarship last year, whether original fee receipt has been submitted?', type: 'select', options: ['Yes', 'No', 'Not Applicable'] },
+  { label: 'Last Year Quarterly Exam mark percentage / Semester1 % or CGPA', type: 'text' },
+  { label: 'All marksheets verified by the panel', type: 'select', options: ['Yes', 'No'] },
+  { label: 'If any documents are missing, mention the missing documents', type: 'textarea' },
+  { label: 'Are you satisfied with the performance of the student last year?', type: 'select', options: ['Yes', 'No', 'Not Applicable'] },
+  { label: 'If not satisfied, mention the reason', type: 'textarea' },
+  { label: 'Current year official fee structure verified by the panel', type: 'select', options: ['Yes', 'No'] },
+  { label: 'Panel members detailed comment regarding the student', type: 'textarea' },
+  { label: 'Panel Members Recommendations', type: 'select', options: ['Approve', 'Reject'] },
+  { label: 'If rejected, mention the specific reason for rejection', type: 'textarea' }
 ];
 
 export default function TrustMemberDashboard() {
@@ -219,14 +225,40 @@ export default function TrustMemberDashboard() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {VERIFICATION_QUESTIONS.map((q, idx) => (
                 <div key={idx} style={{ background: '#f8f9fa', padding: 15, borderRadius: 8, border: '1px solid #e9ecef' }}>
-                  <label style={{ display: 'block', fontWeight: 600, marginBottom: 10 }}>{q}</label>
-                  <input 
-                    type="text" 
-                    value={formAnswers[q] || ''} 
-                    onChange={e => handleAnswerChange(q, e.target.value)}
-                    placeholder="Enter answer..."
-                    style={{ width: '100%', padding: 10, border: '1px solid #ced4da', borderRadius: 4, fontSize: 14 }}
-                  />
+                  <label style={{ display: 'block', fontWeight: 600, marginBottom: 10 }}>{q.label}</label>
+                  
+                  {q.type === 'text' && (
+                    <input 
+                      type="text" 
+                      value={formAnswers[q.label] || ''} 
+                      onChange={e => handleAnswerChange(q.label, e.target.value)}
+                      placeholder="Enter answer..."
+                      style={{ width: '100%', padding: 10, border: '1px solid #ced4da', borderRadius: 4, fontSize: 14 }}
+                    />
+                  )}
+
+                  {q.type === 'textarea' && (
+                    <textarea 
+                      value={formAnswers[q.label] || ''} 
+                      onChange={e => handleAnswerChange(q.label, e.target.value)}
+                      placeholder="Enter details..."
+                      rows={3}
+                      style={{ width: '100%', padding: 10, border: '1px solid #ced4da', borderRadius: 4, fontSize: 14 }}
+                    />
+                  )}
+
+                  {q.type === 'select' && (
+                    <select 
+                      value={formAnswers[q.label] || ''} 
+                      onChange={e => handleAnswerChange(q.label, e.target.value)}
+                      style={{ width: '100%', padding: 10, border: '1px solid #ced4da', borderRadius: 4, fontSize: 14, background: '#fff' }}
+                    >
+                      <option value="">-- Choose an option --</option>
+                      {q.options?.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               ))}
             </div>
