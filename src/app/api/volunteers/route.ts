@@ -50,22 +50,17 @@ export async function POST(req: Request) {
 
     await newUser.save();
 
-    // Setup nodemailer to send email (Using Ethereal for testing)
-    // Create a test account on ethereal.email
-    const testAccount = await nodemailer.createTestAccount();
-
+    // Setup nodemailer to send email
     const transporter = nodemailer.createTransport({
-      host: testAccount.smtp.host,
-      port: testAccount.smtp.port,
-      secure: testAccount.smtp.secure,
+      service: 'gmail',
       auth: {
-        user: testAccount.user,
-        pass: testAccount.pass,
+        user: process.env.EMAIL_USER || 'helpinghandsteam.no.reply@gmail.com',
+        pass: process.env.EMAIL_PASS, // App Password needed here
       },
     });
 
     const info = await transporter.sendMail({
-      from: '"Helping Hands Team" <noreply@helpinghands.org>',
+      from: '"Helping Hands Team" <helpinghandsteam.no.reply@gmail.com>',
       to: email,
       subject: 'Welcome to Helping Hands - Volunteer Account Created',
       text: `Hello ${name},\n\nThank you for volunteering with us!\n\nAn account has been provisioned for you.\nYour temporary password is: ${tempPassword}\n\nPlease login to the dashboard and you will be prompted to change your password.\n\nBest Regards,\nHelping Hands Team`,
@@ -83,12 +78,10 @@ export async function POST(req: Request) {
 
     console.log('Volunteer provisioned:', email);
     console.log('Message sent: %s', info.messageId);
-    console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Account created successfully', 
-      emailUrl: nodemailer.getTestMessageUrl(info) // For easy testing access
+      message: 'Account created successfully'
     }, { status: 201 });
 
   } catch (error) {
