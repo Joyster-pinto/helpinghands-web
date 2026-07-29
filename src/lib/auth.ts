@@ -24,6 +24,7 @@ export const authOptions: NextAuthOptions = {
               name: dbUser.name,
               email: dbUser.email,
               role: dbUser.role,
+              mustChangePassword: dbUser.mustChangePassword,
             };
           }
         } catch (dbError) {
@@ -38,6 +39,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.role = (user as any).role;
+        token.mustChangePassword = (user as any).mustChangePassword;
       }
       return token;
     },
@@ -45,6 +47,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).role = token.role;
         (session.user as any).id = token.sub;
+        (session.user as any).mustChangePassword = token.mustChangePassword;
       }
       return session;
     },

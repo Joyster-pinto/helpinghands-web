@@ -11,6 +11,11 @@ export default withAuth(
         return NextResponse.redirect(new URL("/login", req.url));
       }
       
+      // Force password change if required
+      if (token.mustChangePassword && path !== "/dashboard/change-password") {
+        return NextResponse.redirect(new URL("/dashboard/change-password", req.url));
+      }
+      
       // If trust member tries to go to admin dashboard
       if (token.role === "trust_member" && path === "/dashboard") {
         return NextResponse.redirect(new URL("/dashboard/trust-member", req.url));

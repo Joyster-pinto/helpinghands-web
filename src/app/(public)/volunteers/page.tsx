@@ -17,9 +17,33 @@ export default function VolunteersPage() {
     message: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const res = await fetch('/api/volunteers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to submit registration');
+      }
+      
+      setSubmitted(true);
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -194,8 +218,13 @@ export default function VolunteersPage() {
                       />
                     </div>
 
-                    <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }}>
-                      Submit Volunteer Registration
+                    {error && (
+                      <div className={styles.errorMessage} style={{ color: 'red', marginBottom: '1rem', padding: '10px', backgroundColor: '#fee' }}>
+                        {error}
+                      </div>
+                    )}
+                    <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={isLoading}>
+                      {isLoading ? 'Submitting...' : 'Submit Volunteer Registration'}
                     </button>
                   </form>
                 )}
